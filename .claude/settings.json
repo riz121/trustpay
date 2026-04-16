@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls /Users/rizwanahmed/Documents/project/pay/Trustpay/*.env*)",
+      "Bash(ls /Users/rizwanahmed/Documents/project/pay/Trustpay/.env*)",
+      "Bash(git check-ignore *)"
+    ]
+  }
+}

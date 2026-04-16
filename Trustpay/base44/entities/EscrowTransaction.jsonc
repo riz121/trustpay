@@ -1,0 +1,67 @@
+{
+  "name": "EscrowTransaction",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Description of the transaction"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Amount in AED"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email of the person depositing funds"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Name of the sender"
+    },
+    "receiver_email": {
+      "type": "string",
+      "description": "Email of the person receiving funds"
+    },
+    "receiver_name": {
+      "type": "string",
+      "description": "Name of the receiver"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_deposit",
+        "funded",
+        "sender_confirmed",
+        "receiver_confirmed",
+        "released",
+        "disputed",
+        "cancelled"
+      ],
+      "default": "pending_deposit",
+      "description": "Current status of the escrow"
+    },
+    "sender_confirmed": {
+      "type": "boolean",
+      "default": false
+    },
+    "receiver_confirmed": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the transaction"
+    },
+    "release_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected release date"
+    }
+  },
+  "required": [
+    "title",
+    "amount",
+    "sender_email",
+    "receiver_email"
+  ]
+}

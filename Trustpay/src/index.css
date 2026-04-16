@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+    --background: 225 15% 7%;
+    --foreground: 0 0% 95%;
+    --card: 225 15% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 225 15% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 165 80% 48%;
+    --primary-foreground: 225 15% 7%;
+    --secondary: 225 12% 16%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 225 12% 14%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 265 70% 60%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225 12% 18%;
+    --input: 225 12% 18%;
+    --ring: 165 80% 48%;
+    --chart-1: 165 80% 48%;
+    --chart-2: 265 70% 60%;
+    --chart-3: 200 70% 50%;
+    --chart-4: 40 80% 60%;
+    --chart-5: 340 70% 55%;
+    --radius: 1rem;
+    --sidebar-background: 225 15% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 165 80% 48%;
+    --sidebar-primary-foreground: 225 15% 7%;
+    --sidebar-accent: 225 12% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 225 12% 18%;
+    --sidebar-ring: 165 80% 48%;
+  }
+
+  .dark {
+    --background: 225 15% 7%;
+    --foreground: 0 0% 95%;
+    --card: 225 15% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 225 15% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 165 80% 48%;
+    --primary-foreground: 225 15% 7%;
+    --secondary: 225 12% 16%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 225 12% 14%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 265 70% 60%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225 12% 18%;
+    --input: 225 12% 18%;
+    --ring: 165 80% 48%;
+    --chart-1: 165 80% 48%;
+    --chart-2: 265 70% 60%;
+    --chart-3: 200 70% 50%;
+    --chart-4: 40 80% 60%;
+    --chart-5: 340 70% 55%;
+    --sidebar-background: 225 15% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 165 80% 48%;
+    --sidebar-primary-foreground: 225 15% 7%;
+    --sidebar-accent: 225 12% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 225 12% 18%;
+    --sidebar-ring: 165 80% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-accent {
+  background: linear-gradient(135deg, rgba(45, 212, 162, 0.08), rgba(130, 87, 229, 0.06));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Mobile: disable overscroll bounce and text selection on interactive elements */
+html, body {
+  overscroll-behavior: none;
+}
+
+button, a, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* System dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 225 15% 7%;
+    --foreground: 0 0% 95%;
+    --card: 225 15% 10%;
+    --card-foreground: 0 0% 95%;
+    --popover: 225 15% 10%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 165 80% 48%;
+    --primary-foreground: 225 15% 7%;
+    --secondary: 225 12% 16%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 225 12% 14%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 265 70% 60%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225 12% 18%;
+    --input: 225 12% 18%;
+    --ring: 165 80% 48%;
+  }
+}

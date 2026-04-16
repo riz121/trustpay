@@ -1,0 +1,290 @@
+import React, { useState } from 'react';
+import {
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Feather } from '@expo/vector-icons';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { transactionApi } from '../../api/apiClient';
+import GlassCard from '../../components/GlassCard';
+import { colors } from '../../theme/colors';
+
+export default function NewTransactionScreen({ navigation }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    title: '',
+    amount: '',
+    receiver_email: '',
+    receiver_name: '',
+    notes: '',
+    release_date: '',
+  });
+  const [errors, setErrors] = useState({});
+
+  const setField = (key, val) => {
+    setForm((p) => ({ ...p, [key]: val }));
+    setErrors((e) => ({ ...e, [key]: '' }));
+  };
+
+  const validate = () => {
+    const e = {};
+    if (!form.title.trim()) e.title = 'Title is required';
+    if (!form.amount.trim()) {
+      e.amount = 'Amount is required';
+    } else if (isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
+      e.amount = 'Enter a valid amount';
+    }
+    if (!form.receiver_email.trim()) {
+      e.receiver_email = 'Receiver email is required';
+    } else if (!/\S+@\S+\.\S+/.test(form.receiver_email.trim())) {
+      e.receiver_email = 'Enter a valid email address';
+    }
+    return e;
+  };
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      transactionApi.createEscrow({
+        title: form.title.trim(),
+        amount: Number(form.amount),
+        receiver_email: form.receiver_email.trim().toLowerCase(),
+        receiver_name: form.receiver_name.trim() || undefined,
+        notes: form.notes.trim() || undefined,
+        release_date: form.release_date.trim() || undefined,
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      const txId = data?.id || data?._id || data?.transaction?.id;
+      Alert.alert('Escrow Created!', 'Your escrow transaction has been created successfully.', [
+        {
+          text: 'View Transaction',
+          onPress: () => {
+            if (txId) {
+              navigation.replace('TransactionDetail', { transactionId: txId, transaction: data?.transaction || data });
+            } else {
+              navigation.goBack();
+            }
+          },
+        },
+      ]);
+    },
+    onError: (e) => Alert.alert('Error', e.message || 'Failed to create escrow transaction'),
+  });
+
+  const handleSubmit = () => {
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    createMutation.mutate();
+  };
+
+  const formatReleaseDateHint = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
+  };
+
+  return (
+    <View style={styles.container}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: '#0f0f1a' }}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Feather name="arrow-left" size={22} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>New Escrow</Text>
+          <View style={{ width: 36 }} />
+        </View>
+      </SafeAreaView>
+
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+          {/* Info banner */}
+          <GlassCard style={styles.infoBanner}>
+            <View style={styles.infoBannerContent}>
+              <View style={styles.infoIcon}>
+                <Feather name="shield" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.infoBannerTitle}>How Escrow Works</Text>
+                <Text style={styles.infoBannerText}>
+                  Funds are held securely until both parties confirm. Create the escrow, add funds, and release when satisfied.
+                </Text>
+              </View>
+            </View>
+          </GlassCard>
+
+          <GlassCard style={styles.formCard}>
+            <Text style={styles.sectionLabel}>Transaction Info</Text>
+
+            <InputField
+              label="Title *"
+              icon="tag"
+              placeholder="e.g. Website Design Project"
+              value={form.title}
+              onChangeText={(v) => setField('title', v)}
+              error={errors.title}
+            />
+
+            <InputField
+              label="Amount (AED) *"
+              icon="dollar-sign"
+              placeholder="0.00"
+              value={form.amount}
+              onChangeText={(v) => setField('amount', v.replace(/[^0-9.]/g, ''))}
+              keyboardType="decimal-pad"
+              error={errors.amount}
+            />
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionLabel}>Receiver</Text>
+
+            <InputField
+              label="Receiver Email *"
+              icon="mail"
+              placeholder="receiver@example.com"
+              value={form.receiver_email}
+              onChangeText={(v) => setField('receiver_email', v)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.receiver_email}
+            />
+
+            <InputField
+              label="Receiver Name (Optional)"
+              icon="user"
+              placeholder="John Doe"
+              value={form.receiver_name}
+              onChangeText={(v) => setField('receiver_name', v)}
+              autoCapitalize="words"
+              error={errors.receiver_name}
+            />
+
+            <View style={styles.divider} />
+            <Text style={styles.sectionLabel}>Additional Info</Text>
+
+            <View style={{ marginBottom: 14 }}>
+              <Text style={styles.inputLabel}>Notes (Optional)</Text>
+              <View style={[styles.textAreaWrapper, errors.notes && styles.inputError]}>
+                <TextInput
+                  style={styles.textArea}
+                  placeholder="Any additional details about this transaction..."
+                  placeholderTextColor={colors.textMuted}
+                  value={form.notes}
+                  onChangeText={(v) => setField('notes', v)}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+            </View>
+
+            <InputField
+              label="Release Date (Optional)"
+              icon="calendar"
+              placeholder={`e.g. ${formatReleaseDateHint()}`}
+              value={form.release_date}
+              onChangeText={(v) => setField('release_date', v)}
+              error={errors.release_date}
+            />
+            <Text style={styles.fieldHint}>Format: YYYY-MM-DD</Text>
+          </GlassCard>
+
+          {/* Summary */}
+          {form.title || form.amount || form.receiver_email ? (
+            <GlassCard style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Summary</Text>
+              {form.title ? <SummaryRow label="Title" value={form.title} /> : null}
+              {form.amount ? <SummaryRow label="Amount" value={`AED ${Number(form.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /> : null}
+              {form.receiver_email ? <SummaryRow label="To" value={form.receiver_email} /> : null}
+            </GlassCard>
+          ) : null}
+
+          <TouchableOpacity
+            onPress={handleSubmit}
+            activeOpacity={0.8}
+            disabled={createMutation.isPending}
+            style={{ marginTop: 8 }}
+          >
+            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.submitBtn}>
+              {createMutation.isPending ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                  <Feather name="shield" size={20} color="#fff" />
+                  <Text style={styles.submitBtnText}>Create Escrow</Text>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+function InputField({ label, icon, error, ...props }) {
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={inputStyles.label}>{label}</Text>
+      <View style={[inputStyles.wrapper, error && inputStyles.wrapperError]}>
+        <Feather name={icon} size={18} color={colors.textMuted} style={inputStyles.icon} />
+        <TextInput
+          style={inputStyles.input}
+          placeholderTextColor={colors.textMuted}
+          {...props}
+        />
+      </View>
+      {error ? <Text style={inputStyles.errorText}>{error}</Text> : null}
+    </View>
+  );
+}
+
+function SummaryRow({ label, value }) {
+  return (
+    <View style={summaryStyles.row}>
+      <Text style={summaryStyles.label}>{label}</Text>
+      <Text style={summaryStyles.value}>{value}</Text>
+    </View>
+  );
+}
+
+const inputStyles = StyleSheet.create({
+  label: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginBottom: 6 },
+  wrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12 },
+  wrapperError: { borderColor: colors.destructive },
+  icon: { marginLeft: 14, marginRight: 8 },
+  input: { flex: 1, color: colors.text, fontSize: 15, padding: 14, paddingLeft: 0 },
+  errorText: { color: colors.destructive, fontSize: 12, marginTop: 4 },
+});
+
+const summaryStyles = StyleSheet.create({
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
+  label: { color: colors.textMuted, fontSize: 14 },
+  value: { color: colors.text, fontSize: 14, fontWeight: '500', maxWidth: '60%', textAlign: 'right' },
+});
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  backBtn: { padding: 4 },
+  headerTitle: { color: colors.text, fontSize: 18, fontWeight: '600' },
+  scroll: { padding: 16, paddingBottom: 40 },
+  infoBanner: { marginBottom: 16, padding: 14 },
+  infoBannerContent: { flexDirection: 'row', gap: 12 },
+  infoIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(99,102,241,0.15)', alignItems: 'center', justifyContent: 'center' },
+  infoBannerTitle: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
+  infoBannerText: { color: colors.textMuted, fontSize: 13, lineHeight: 20 },
+  formCard: { marginBottom: 16 },
+  sectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
+  inputLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginBottom: 6 },
+  textAreaWrapper: { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, padding: 14 },
+  textArea: { color: colors.text, fontSize: 15, height: 100 },
+  inputError: { borderColor: colors.destructive },
+  fieldHint: { color: colors.textMuted, fontSize: 12, marginTop: -10, marginBottom: 14, marginLeft: 2 },
+  summaryCard: { marginBottom: 16 },
+  summaryTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 10 },
+  submitBtn: { borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  submitBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+});
