@@ -16,7 +16,10 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.trustpay.mobile"
+      "bundleIdentifier": "com.trustpay.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -41,8 +44,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "3ab3d767-fdef-4914-adfa-605d86b954c5"
+        "projectId": "68369ce0-c42d-4e36-a7bb-77fb4e31d1f7"
       }
-    }
+    },
+    "owner": "suhaibalbrek"
   }
 }
