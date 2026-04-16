@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://51.21.197.111:5000';
+const BASE_URL = 'http://51.21.197.111';
 const TOKEN_KEY = 'trustpay_access_token';
 const REFRESH_TOKEN_KEY = 'trustpay_refresh_token';
 
