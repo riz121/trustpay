@@ -1,0 +1,53 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "transaction",
+        "revenue",
+        "user_activity",
+        "dispute",
+        "custom"
+      ],
+      "default": "transaction"
+    },
+    "date_range_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "date_range_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "generating",
+        "ready",
+        "failed"
+      ],
+      "default": "generating"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "total_transactions": {
+      "type": "number"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "file_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}

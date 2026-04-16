@@ -1,0 +1,75 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "admin_email": {
+      "type": "string",
+      "description": "Email of the admin who performed the action"
+    },
+    "admin_name": {
+      "type": "string",
+      "description": "Full name of the admin"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "user_suspended",
+        "user_banned",
+        "user_activated",
+        "user_deleted",
+        "kyc_approved",
+        "kyc_rejected",
+        "dispute_resolved",
+        "dispute_rejected",
+        "dispute_under_review",
+        "ticket_resolved",
+        "ticket_closed",
+        "notification_sent",
+        "transaction_flagged",
+        "transaction_unflagged",
+        "report_generated",
+        "other"
+      ],
+      "description": "Type of action performed"
+    },
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "user",
+        "dispute",
+        "ticket",
+        "transaction",
+        "notification",
+        "report"
+      ],
+      "description": "Type of resource affected"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "ID or reference of the affected resource"
+    },
+    "target_label": {
+      "type": "string",
+      "description": "Human-readable label for the target (e.g. user email, ticket number)"
+    },
+    "details": {
+      "type": "string",
+      "description": "Additional context or notes about the action"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "low"
+    }
+  },
+  "required": [
+    "admin_email",
+    "action",
+    "target_type"
+  ]
+}

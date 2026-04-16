@@ -1,0 +1,57 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "target_audience": {
+      "type": "string",
+      "enum": [
+        "all_users",
+        "active_users",
+        "inactive_users",
+        "specific_user"
+      ],
+      "default": "all_users"
+    },
+    "target_email": {
+      "type": "string",
+      "description": "Specific user email if target is specific_user"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "promo",
+        "update",
+        "alert"
+      ],
+      "default": "info"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent",
+        "scheduled"
+      ],
+      "default": "draft"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "message",
+    "type"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "verification_level": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "pending_verification",
+        "uae_verified"
+      ],
+      "default": "unverified"
+    },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "banned",
+        "pending_deletion"
+      ],
+      "default": "active"
+    },
+    "subscription_plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "pro",
+        "business"
+      ],
+      "default": "free"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "internal_notes": {
+      "type": "string"
+    }
+  }
+}

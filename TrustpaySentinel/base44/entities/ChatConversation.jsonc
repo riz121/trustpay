@@ -1,0 +1,41 @@
+{
+  "name": "ChatConversation",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "App user email"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "waiting",
+        "resolved",
+        "closed"
+      ],
+      "default": "waiting"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "Admin staff email assigned to this chat"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "unread_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "user_email",
+    "status"
+  ]
+}

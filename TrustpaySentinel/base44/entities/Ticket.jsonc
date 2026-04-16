@@ -1,0 +1,71 @@
+{
+  "name": "Ticket",
+  "type": "object",
+  "properties": {
+    "ticket_number": {
+      "type": "string",
+      "description": "Auto-assigned e.g. CMP-0001"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "account_issue",
+        "payment_problem",
+        "fraud_report",
+        "kyc_appeal",
+        "withdrawal_issue",
+        "other"
+      ],
+      "default": "other"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "pending_user",
+        "resolved",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "Admin staff email"
+    },
+    "resolution_notes": {
+      "type": "string"
+    },
+    "linked_transaction_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "subject",
+    "category",
+    "status"
+  ]
+}

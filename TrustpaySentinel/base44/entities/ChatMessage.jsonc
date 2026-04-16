@@ -1,0 +1,32 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "ID of the parent conversation"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "user",
+        "admin"
+      ],
+      "description": "Who sent the message"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "sender_email": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "sender_type",
+    "content"
+  ]
+}
