@@ -46,7 +46,11 @@ export default function SelectPlanScreen({ navigation }) {
   const { updateUser, user } = useAuth();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('standard');
-  const [profile, setProfile] = useState({ phone: '', city: '', company: '', emirates_id: '' });
+  const [profile, setProfile] = useState({
+    phone: '', city: '', company: '', emirates_id: '',
+    date_of_birth: '', address: '', gender: '', accountType: 'individual',
+    country: '', howDidYouHear: '', vatNumber: '',
+  });
   const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '', name: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -105,6 +109,13 @@ export default function SelectPlanScreen({ navigation }) {
         city: profile.city.trim(),
         company: profile.company.trim(),
         emirates_id: profile.emirates_id.trim(),
+        date_of_birth: profile.date_of_birth.trim(),
+        address: profile.address.trim(),
+        gender: profile.gender,
+        account_type: profile.accountType,
+        country: profile.country.trim(),
+        how_did_you_hear: profile.howDidYouHear,
+        vat_number: profile.vatNumber.trim(),
         plan: selectedPlan,
         plan_selected_at: new Date().toISOString(),
       });
@@ -231,6 +242,114 @@ export default function SelectPlanScreen({ navigation }) {
                     value={profile.emirates_id}
                     onChangeText={(v) => setProfileField('emirates_id', v)}
                     keyboardType="number-pad"
+                  />
+                  <InputField
+                    label="Date of Birth (Optional)"
+                    icon="calendar"
+                    placeholder="DD/MM/YYYY"
+                    value={profile.date_of_birth}
+                    onChangeText={(v) => setProfileField('date_of_birth', v)}
+                  />
+                  <InputField
+                    label="Address (Optional)"
+                    icon="map-pin"
+                    placeholder="Street, area, city"
+                    value={profile.address}
+                    onChangeText={(v) => setProfileField('address', v)}
+                  />
+
+                  {/* Gender */}
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={inputStyles.label}>Gender (Optional)</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                      {['Male', 'Female', 'Other'].map((option) => (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={() => setProfileField('gender', option)}
+                          style={{
+                            paddingHorizontal: 16,
+                            paddingVertical: 10,
+                            borderRadius: 10,
+                            borderWidth: 1.5,
+                            borderColor: profile.gender === option ? colors.primary : colors.inputBorder,
+                            backgroundColor: profile.gender === option ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                          }}
+                        >
+                          <Text style={{ color: profile.gender === option ? colors.primary : colors.textMuted, fontWeight: '600' }}>
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Account Type */}
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={inputStyles.label}>Account Type</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                      {['Individual', 'Organisation'].map((option) => {
+                        const val = option.toLowerCase();
+                        return (
+                          <TouchableOpacity
+                            key={option}
+                            onPress={() => setProfileField('accountType', val)}
+                            style={{
+                              paddingHorizontal: 16,
+                              paddingVertical: 10,
+                              borderRadius: 10,
+                              borderWidth: 1.5,
+                              borderColor: profile.accountType === val ? colors.primary : colors.inputBorder,
+                              backgroundColor: profile.accountType === val ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                            }}
+                          >
+                            <Text style={{ color: profile.accountType === val ? colors.primary : colors.textMuted, fontWeight: '600' }}>
+                              {option}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+
+                  <InputField
+                    label="Country (Optional)"
+                    icon="globe"
+                    placeholder="e.g. United Arab Emirates"
+                    value={profile.country}
+                    onChangeText={(v) => setProfileField('country', v)}
+                  />
+
+                  {/* How did you hear about us */}
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={inputStyles.label}>How did you hear about us? (Optional)</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                      {['Social Media', 'Friend', 'Google', 'App Store', 'Other'].map((option) => (
+                        <TouchableOpacity
+                          key={option}
+                          onPress={() => setProfileField('howDidYouHear', option)}
+                          style={{
+                            paddingHorizontal: 16,
+                            paddingVertical: 10,
+                            borderRadius: 10,
+                            borderWidth: 1.5,
+                            borderColor: profile.howDidYouHear === option ? colors.primary : colors.inputBorder,
+                            backgroundColor: profile.howDidYouHear === option ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                          }}
+                        >
+                          <Text style={{ color: profile.howDidYouHear === option ? colors.primary : colors.textMuted, fontWeight: '600' }}>
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  <InputField
+                    label="VAT Number (Optional)"
+                    icon="hash"
+                    placeholder="e.g. 100123456789003"
+                    value={profile.vatNumber}
+                    onChangeText={(v) => setProfileField('vatNumber', v)}
                   />
                 </View>
               </View>

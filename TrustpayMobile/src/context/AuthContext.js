@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [onboardingDone, setOnboardingDoneState] = useState(false);
-  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(false);
+  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true);
 
   const isAuthenticated = !!user;
 
@@ -34,15 +34,15 @@ export function AuthProvider({ children }) {
   const checkAppState = useCallback(async () => {
     setIsLoadingAuth(true);
     try {
+      // Always load onboarding state regardless of auth status
+      await loadOnboardingState();
       const token = await getToken();
       if (!token) {
         setUser(null);
-        setOnboardingDoneState(false);
         return;
       }
       const userData = await authApi.getMe();
       setUser(userData);
-      await loadOnboardingState();
     } catch (e) {
       await removeToken();
       setUser(null);
@@ -67,7 +67,6 @@ export function AuthProvider({ children }) {
       const userData = await authApi.getMe();
       setUser(userData);
     }
-    await loadOnboardingState();
     return data;
   };
 
@@ -83,14 +82,13 @@ export function AuthProvider({ children }) {
       const userData = await authApi.getMe();
       setUser(userData);
     }
-    await loadOnboardingState();
     return data;
   };
 
   const logout = async () => {
     await removeToken();
     setUser(null);
-    setOnboardingDoneState(false);
+    // Do not reset onboardingDone — onboarding is shown before auth and should persist
   };
 
   const updateUser = useCallback(async (data) => {
@@ -106,13 +104,12 @@ export function AuthProvider({ children }) {
     try {
       const userData = await authApi.getMe();
       setUser(userData);
-      await loadOnboardingState();
       return userData;
     } catch (e) {
       await removeToken();
       throw e;
     }
-  }, [loadOnboardingState]);
+  }, []);
 
   return (
     <AuthContext.Provider

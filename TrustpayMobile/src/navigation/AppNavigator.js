@@ -37,7 +37,6 @@ function OnboardingStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-      <Stack.Screen name="SelectPlan" component={SelectPlanScreen} />
     </Stack.Navigator>
   );
 }
@@ -114,7 +113,7 @@ export default function AppNavigator() {
   const { user, isLoadingAuth, isAuthenticated, onboardingDone, isLoadingOnboarding } = useAuth();
 
   // Show spinner while auth or onboarding state is loading
-  if (isLoadingAuth || (isAuthenticated && isLoadingOnboarding)) {
+  if (isLoadingAuth || isLoadingOnboarding) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#6366f1" />
@@ -122,18 +121,17 @@ export default function AppNavigator() {
     );
   }
 
-  // Not authenticated → show auth screens
+  // Onboarding has not been seen yet — show it before anything else
+  if (!onboardingDone) {
+    return <OnboardingStack />;
+  }
+
+  // Onboarding done but not authenticated → show auth screens
   if (!isAuthenticated) {
     return <AuthStack />;
   }
 
-  // If user already has a plan, they've completed onboarding before — skip it
-  // (handles re-login, reinstall, or cleared AsyncStorage)
-  if (!onboardingDone && !user?.plan) {
-    return <OnboardingStack />;
-  }
-
-  // Authenticated + onboarding done but no plan selected
+  // Authenticated but no plan selected yet
   if (!user?.plan) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -142,7 +140,7 @@ export default function AppNavigator() {
     );
   }
 
-  // Fully onboarded → Main App
+  // Fully set up → Main App
   return <MainTabs />;
 }
 
