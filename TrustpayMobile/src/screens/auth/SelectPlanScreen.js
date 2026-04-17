@@ -17,7 +17,7 @@ const PLANS = [
     period: '/month',
     color: colors.textMuted,
     gradient: ['#374151', '#1f2937'],
-    features: ['3 escrow transactions/month', 'Basic dispute resolution', 'Email support'],
+    features: ['3 transactions/month', 'Basic dispute resolution', 'Email support'],
     popular: false,
   },
   {
@@ -27,7 +27,7 @@ const PLANS = [
     period: '/month',
     color: colors.primary,
     gradient: ['#6366f1', '#8b5cf6'],
-    features: ['50 escrow transactions/month', 'Priority dispute resolution', '24/7 support', 'Lower fees'],
+    features: ['50 transactions/month', 'Priority dispute resolution', '24/7 support', 'Lower fees'],
     popular: true,
   },
   {
@@ -47,6 +47,7 @@ export default function SelectPlanScreen({ navigation }) {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('standard');
   const [profile, setProfile] = useState({
+    username: '',
     phone: '', city: '', company: '', emirates_id: '',
     date_of_birth: '', address: '', gender: '', accountType: 'individual',
     country: '', howDidYouHear: '', vatNumber: '',
@@ -66,6 +67,9 @@ export default function SelectPlanScreen({ navigation }) {
 
   const validateProfile = () => {
     const e = {};
+    if (profile.username.trim() && !/^[a-z0-9_]{3,30}$/.test(profile.username.trim())) {
+      e.username = 'Only lowercase letters, numbers, underscores (3–30 chars)';
+    }
     if (!profile.phone.trim()) e.phone = 'Phone number is required';
     if (!profile.city.trim()) e.city = 'City is required';
     return e;
@@ -105,6 +109,7 @@ export default function SelectPlanScreen({ navigation }) {
     try {
       await updateUser({
         full_name: user?.full_name,
+        username: profile.username.trim() || undefined,
         phone: profile.phone.trim(),
         city: profile.city.trim(),
         company: profile.company.trim(),
@@ -211,6 +216,16 @@ export default function SelectPlanScreen({ navigation }) {
               <View style={styles.stepContent}>
                 <Text style={styles.sectionTitle}>Tell us about yourself</Text>
                 <View style={styles.formCard}>
+                  <InputField
+                    label="@Username (Optional)"
+                    icon="at-sign"
+                    placeholder="yourname"
+                    value={profile.username}
+                    onChangeText={(v) => setProfileField('username', v.replace(/[^a-z0-9_]/g, '').toLowerCase())}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    error={errors.username}
+                  />
                   <InputField
                     label="Phone Number *"
                     icon="phone"

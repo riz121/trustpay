@@ -70,8 +70,10 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (full_name, email, password) => {
-    const data = await authApi.register({ full_name, email, password });
+  const register = async (full_name, email, password, username) => {
+    const payload = { full_name, email, password };
+    if (username) payload.username = username;
+    const data = await authApi.register(payload);
     if (data.access_token) {
       await setToken(data.access_token);
       if (data.refresh_token) await setRefreshToken(data.refresh_token);

@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactionApi } from '../../api/apiClient';
+import { transactionApi, api } from '../../api/apiClient';
 import GlassCard from '../../components/GlassCard';
 import { colors } from '../../theme/colors';
 
@@ -17,15 +17,44 @@ export default function NewTransactionScreen({ navigation }) {
     title: '',
     amount: '',
     receiver_email: '',
+    receiver_username: '',
     receiver_name: '',
     notes: '',
     release_date: '',
   });
   const [errors, setErrors] = useState({});
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [receiverMode, setReceiverMode] = useState('email'); // 'email' | 'username'
 
   const setField = (key, val) => {
     setForm((p) => ({ ...p, [key]: val }));
     setErrors((e) => ({ ...e, [key]: '' }));
+  };
+
+  // Look up a user by @username and auto-fill email + name
+  const handleUsernameLookup = async () => {
+    const username = form.receiver_username.replace(/^@/, '').trim();
+    if (!username) {
+      setErrors((e) => ({ ...e, receiver_username: 'Enter a username to look up' }));
+      return;
+    }
+    setLookupLoading(true);
+    try {
+      const result = await api.get(`/api/user/lookup?username=${encodeURIComponent(username)}`);
+      if (result?.email) {
+        setForm((p) => ({
+          ...p,
+          receiver_email: result.email,
+          receiver_name: result.full_name || p.receiver_name,
+        }));
+        setErrors((e) => ({ ...e, receiver_username: '' }));
+        Alert.alert('User Found', `Found: ${result.full_name || result.email}`);
+      }
+    } catch (e) {
+      setErrors((e2) => ({ ...e2, receiver_username: 'User not found. Check the username.' }));
+    } finally {
+      setLookupLoading(false);
+    }
   };
 
   const validate = () => {
@@ -57,12 +86,15 @@ export default function NewTransactionScreen({ navigation }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       const txId = data?.id || data?._id || data?.transaction?.id;
-      Alert.alert('Escrow Created!', 'Your escrow transaction has been created successfully.', [
+      Alert.alert('Transaction Created!', 'Your payment has been created successfully.', [
         {
           text: 'View Transaction',
           onPress: () => {
             if (txId) {
-              navigation.replace('TransactionDetail', { transactionId: txId, transaction: data?.transaction || data });
+              navigation.replace('TransactionDetail', {
+                transactionId: txId,
+                transaction: data?.transaction || data,
+              });
             } else {
               navigation.goBack();
             }
@@ -70,7 +102,7 @@ export default function NewTransactionScreen({ navigation }) {
         },
       ]);
     },
-    onError: (e) => Alert.alert('Error', e.message || 'Failed to create escrow transaction'),
+    onError: (e) => Alert.alert('Error', e.message || 'Failed to create transaction'),
   });
 
   const handleSubmit = () => {
@@ -92,13 +124,17 @@ export default function NewTransactionScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Feather name="arrow-left" size={22} color={colors.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Escrow</Text>
+          <Text style={styles.headerTitle}>New Transaction</Text>
           <View style={{ width: 36 }} />
         </View>
       </SafeAreaView>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Info banner */}
           <GlassCard style={styles.infoBanner}>
             <View style={styles.infoBannerContent}>
@@ -106,9 +142,9 @@ export default function NewTransactionScreen({ navigation }) {
                 <Feather name="shield" size={20} color={colors.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.infoBannerTitle}>How Escrow Works</Text>
+                <Text style={styles.infoBannerTitle}>How it Works</Text>
                 <Text style={styles.infoBannerText}>
-                  Funds are held securely until both parties confirm. Create the escrow, add funds, and release when satisfied.
+                  Funds are held securely until both parties confirm. Create the transaction, add funds, and release when satisfied.
                 </Text>
               </View>
             </View>
@@ -137,18 +173,77 @@ export default function NewTransactionScreen({ navigation }) {
             />
 
             <View style={styles.divider} />
-            <Text style={styles.sectionLabel}>Receiver</Text>
 
-            <InputField
-              label="Receiver Email *"
-              icon="mail"
-              placeholder="receiver@example.com"
-              value={form.receiver_email}
-              onChangeText={(v) => setField('receiver_email', v)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.receiver_email}
-            />
+            {/* Receiver section with email/username toggle */}
+            <View style={styles.receiverHeader}>
+              <Text style={styles.sectionLabel}>Receiver</Text>
+              <View style={styles.modeToggle}>
+                <TouchableOpacity
+                  onPress={() => setReceiverMode('email')}
+                  style={[styles.modeBtn, receiverMode === 'email' && styles.modeBtnActive]}
+                >
+                  <Text style={[styles.modeBtnText, receiverMode === 'email' && styles.modeBtnTextActive]}>
+                    Email
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setReceiverMode('username')}
+                  style={[styles.modeBtn, receiverMode === 'username' && styles.modeBtnActive]}
+                >
+                  <Text style={[styles.modeBtnText, receiverMode === 'username' && styles.modeBtnTextActive]}>
+                    @Username
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {receiverMode === 'username' ? (
+              <View style={{ marginBottom: 14 }}>
+                <Text style={inputStyles.label}>@Username *</Text>
+                <View style={[inputStyles.wrapper, errors.receiver_username && inputStyles.wrapperError]}>
+                  <Feather name="at-sign" size={18} color={colors.textMuted} style={inputStyles.icon} />
+                  <TextInput
+                    style={inputStyles.input}
+                    placeholder="username"
+                    placeholderTextColor={colors.textMuted}
+                    value={form.receiver_username}
+                    onChangeText={(v) => setField('receiver_username', v.replace(/^@+/, ''))}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  <TouchableOpacity
+                    onPress={handleUsernameLookup}
+                    disabled={lookupLoading}
+                    style={styles.lookupBtn}
+                  >
+                    {lookupLoading ? (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    ) : (
+                      <Text style={styles.lookupBtnText}>Find</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                {errors.receiver_username ? (
+                  <Text style={inputStyles.errorText}>{errors.receiver_username}</Text>
+                ) : null}
+                {form.receiver_email ? (
+                  <Text style={styles.resolvedEmail}>
+                    <Feather name="check-circle" size={12} color={colors.emerald} /> Resolved: {form.receiver_email}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <InputField
+                label="Receiver Email *"
+                icon="mail"
+                placeholder="receiver@example.com"
+                value={form.receiver_email}
+                onChangeText={(v) => setField('receiver_email', v)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={errors.receiver_email}
+              />
+            )}
 
             <InputField
               label="Receiver Name (Optional)"
@@ -191,11 +286,16 @@ export default function NewTransactionScreen({ navigation }) {
           </GlassCard>
 
           {/* Summary */}
-          {form.title || form.amount || form.receiver_email ? (
+          {(form.title || form.amount || form.receiver_email) ? (
             <GlassCard style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>Summary</Text>
               {form.title ? <SummaryRow label="Title" value={form.title} /> : null}
-              {form.amount ? <SummaryRow label="Amount" value={`AED ${Number(form.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} /> : null}
+              {form.amount ? (
+                <SummaryRow
+                  label="Amount"
+                  value={`AED ${Number(form.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                />
+              ) : null}
               {form.receiver_email ? <SummaryRow label="To" value={form.receiver_email} /> : null}
             </GlassCard>
           ) : null}
@@ -212,7 +312,7 @@ export default function NewTransactionScreen({ navigation }) {
               ) : (
                 <>
                   <Feather name="shield" size={20} color="#fff" />
-                  <Text style={styles.submitBtnText}>Create Escrow</Text>
+                  <Text style={styles.submitBtnText}>Create Transaction</Text>
                 </>
               )}
             </LinearGradient>
@@ -251,7 +351,14 @@ function SummaryRow({ label, value }) {
 
 const inputStyles = StyleSheet.create({
   label: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginBottom: 6 },
-  wrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12 },
+  wrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.inputBg,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    borderRadius: 12,
+  },
   wrapperError: { borderColor: colors.destructive },
   icon: { marginLeft: 14, marginRight: 8 },
   input: { flex: 1, color: colors.text, fontSize: 15, padding: 14, paddingLeft: 0 },
@@ -266,25 +373,73 @@ const summaryStyles = StyleSheet.create({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   backBtn: { padding: 4 },
   headerTitle: { color: colors.text, fontSize: 18, fontWeight: '600' },
   scroll: { padding: 16, paddingBottom: 40 },
   infoBanner: { marginBottom: 16, padding: 14 },
   infoBannerContent: { flexDirection: 'row', gap: 12 },
-  infoIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(99,102,241,0.15)', alignItems: 'center', justifyContent: 'center' },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(99,102,241,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   infoBannerTitle: { color: colors.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
   infoBannerText: { color: colors.textMuted, fontSize: 13, lineHeight: 20 },
   formCard: { marginBottom: 16 },
-  sectionLabel: { color: colors.textMuted, fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 },
+  sectionLabel: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 14,
+  },
   divider: { height: 1, backgroundColor: colors.border, marginVertical: 16 },
   inputLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: '500', marginBottom: 6 },
-  textAreaWrapper: { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, padding: 14 },
+  textAreaWrapper: {
+    backgroundColor: colors.inputBg,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    borderRadius: 12,
+    padding: 14,
+  },
   textArea: { color: colors.text, fontSize: 15, height: 100 },
   inputError: { borderColor: colors.destructive },
   fieldHint: { color: colors.textMuted, fontSize: 12, marginTop: -10, marginBottom: 14, marginLeft: 2 },
   summaryCard: { marginBottom: 16 },
   summaryTitle: { color: colors.text, fontSize: 15, fontWeight: '700', marginBottom: 10 },
-  submitBtn: { borderRadius: 14, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  submitBtn: {
+    borderRadius: 14,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   submitBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  // Receiver mode toggle
+  receiverHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  modeToggle: { flexDirection: 'row', backgroundColor: colors.inputBg, borderRadius: 8, padding: 2 },
+  modeBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 6 },
+  modeBtnActive: { backgroundColor: colors.primary },
+  modeBtnText: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  modeBtnTextActive: { color: '#fff' },
+  lookupBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderLeftWidth: 1,
+    borderLeftColor: colors.inputBorder,
+  },
+  lookupBtnText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+  resolvedEmail: { color: colors.emerald, fontSize: 12, marginTop: 4, marginLeft: 2 },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
@@ -30,15 +30,70 @@ function InputField({ label, icon, error, required, ...props }) {
   );
 }
 
+function ToggleGroup({ label, options, value, onChange }) {
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.toggleRow}>
+        {options.map((opt) => {
+          const selected = value === opt.value;
+          return (
+            <TouchableOpacity
+              key={opt.value}
+              onPress={() => onChange(opt.value)}
+              activeOpacity={0.7}
+              style={[
+                styles.toggleBtn,
+                selected && styles.toggleBtnSelected,
+              ]}
+            >
+              <Text style={[styles.toggleBtnText, selected && styles.toggleBtnTextSelected]}>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+const GENDER_OPTIONS = [
+  { label: 'Male', value: 'male' },
+  { label: 'Female', value: 'female' },
+  { label: 'Other', value: 'other' },
+];
+
+const ACCOUNT_TYPE_OPTIONS = [
+  { label: 'Individual', value: 'individual' },
+  { label: 'Organisation', value: 'organisation' },
+];
+
+const HOW_HEAR_OPTIONS = [
+  { label: 'Social Media', value: 'social_media' },
+  { label: 'Friend', value: 'friend' },
+  { label: 'Google', value: 'google' },
+  { label: 'App Store', value: 'app_store' },
+  { label: 'Other', value: 'other' },
+];
+
 export default function EditProfileScreen({ navigation }) {
   const { user, updateUser } = useAuth();
 
   const [form, setForm] = useState({
     full_name: user?.full_name || '',
+    username: user?.username || '',
     phone: user?.phone || '',
     city: user?.city || '',
     company: user?.company || '',
     emirates_id: user?.emirates_id || '',
+    date_of_birth: user?.date_of_birth || '',
+    address: user?.address || '',
+    gender: user?.gender || '',
+    account_type: user?.account_type || 'individual',
+    country: user?.country || '',
+    how_did_you_hear: user?.how_did_you_hear || '',
+    vat_number: user?.vat_number || '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -51,9 +106,9 @@ export default function EditProfileScreen({ navigation }) {
   const validate = () => {
     const e = {};
     if (!form.full_name.trim()) e.full_name = 'Full name is required';
-    if (!form.phone.trim()) e.phone = 'Phone number is required';
-    else if (form.phone.trim().length < 7) e.phone = 'Enter a valid phone number';
-    if (!form.city.trim()) e.city = 'City is required';
+    if (form.username.trim() && !/^[a-z0-9_]{3,30}$/.test(form.username.trim())) {
+      e.username = 'Only lowercase letters, numbers, underscores (3–30 chars)';
+    }
     return e;
   };
 
@@ -68,10 +123,18 @@ export default function EditProfileScreen({ navigation }) {
     try {
       await updateUser({
         full_name: form.full_name.trim(),
-        phone: form.phone.trim(),
-        city: form.city.trim(),
+        username: form.username.trim() || undefined,
+        phone: form.phone.trim() || undefined,
+        city: form.city.trim() || undefined,
         company: form.company.trim() || undefined,
         emirates_id: form.emirates_id.trim() || undefined,
+        date_of_birth: form.date_of_birth.trim() || undefined,
+        address: form.address.trim() || undefined,
+        gender: form.gender || undefined,
+        account_type: form.account_type || undefined,
+        country: form.country.trim() || undefined,
+        how_did_you_hear: form.how_did_you_hear || undefined,
+        vat_number: form.vat_number.trim() || undefined,
       });
       Alert.alert('Profile Updated', 'Your profile has been saved successfully.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -83,16 +146,8 @@ export default function EditProfileScreen({ navigation }) {
     }
   };
 
-  const hasChanges =
-    form.full_name !== (user?.full_name || '') ||
-    form.phone !== (user?.phone || '') ||
-    form.city !== (user?.city || '') ||
-    form.company !== (user?.company || '') ||
-    form.emirates_id !== (user?.emirates_id || '');
-
   return (
     <View style={styles.container}>
-      {/* Header */}
       <SafeAreaView edges={['top']} style={styles.headerSafe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -124,7 +179,7 @@ export default function EditProfileScreen({ navigation }) {
             <Text style={styles.avatarHint}>Avatar is auto-generated from your name</Text>
           </View>
 
-          {/* Personal Info */}
+          {/* ── Personal Info ── */}
           <GlassCard style={styles.formCard}>
             <Text style={styles.sectionLabel}>Personal Information</Text>
 
@@ -140,6 +195,17 @@ export default function EditProfileScreen({ navigation }) {
             />
 
             <InputField
+              label="@Username"
+              icon="at-sign"
+              placeholder="yourname"
+              value={form.username}
+              onChangeText={(v) => setField('username', v.replace(/[^a-z0-9_]/g, '').toLowerCase())}
+              autoCapitalize="none"
+              autoCorrect={false}
+              error={errors.username}
+            />
+
+            <InputField
               label="Phone Number"
               icon="phone"
               placeholder="+971 50 123 4567"
@@ -147,8 +213,29 @@ export default function EditProfileScreen({ navigation }) {
               onChangeText={(v) => setField('phone', v)}
               keyboardType="phone-pad"
               error={errors.phone}
-              required
             />
+
+            <InputField
+              label="Date of Birth"
+              icon="calendar"
+              placeholder="YYYY-MM-DD"
+              value={form.date_of_birth}
+              onChangeText={(v) => setField('date_of_birth', v)}
+              keyboardType="number-pad"
+              error={errors.date_of_birth}
+            />
+
+            <ToggleGroup
+              label="Gender"
+              options={GENDER_OPTIONS}
+              value={form.gender}
+              onChange={(v) => setField('gender', v)}
+            />
+          </GlassCard>
+
+          {/* ── Location ── */}
+          <GlassCard style={styles.formCard}>
+            <Text style={styles.sectionLabel}>Location</Text>
 
             <InputField
               label="City"
@@ -157,13 +244,39 @@ export default function EditProfileScreen({ navigation }) {
               value={form.city}
               onChangeText={(v) => setField('city', v)}
               error={errors.city}
-              required
+            />
+
+            <InputField
+              label="Country"
+              icon="globe"
+              placeholder="United Arab Emirates"
+              value={form.country}
+              onChangeText={(v) => setField('country', v)}
+              autoCapitalize="words"
+              error={errors.country}
+            />
+
+            <InputField
+              label="Address"
+              icon="home"
+              placeholder="Street, Area"
+              value={form.address}
+              onChangeText={(v) => setField('address', v)}
+              autoCapitalize="sentences"
+              error={errors.address}
             />
           </GlassCard>
 
-          {/* Business Info */}
+          {/* ── Business Info ── */}
           <GlassCard style={styles.formCard}>
             <Text style={styles.sectionLabel}>Business Information</Text>
+
+            <ToggleGroup
+              label="Account Type"
+              options={ACCOUNT_TYPE_OPTIONS}
+              value={form.account_type}
+              onChange={(v) => setField('account_type', v)}
+            />
 
             <InputField
               label="Company"
@@ -173,6 +286,16 @@ export default function EditProfileScreen({ navigation }) {
               onChangeText={(v) => setField('company', v)}
               autoCapitalize="words"
               error={errors.company}
+            />
+
+            <InputField
+              label="VAT Number"
+              icon="hash"
+              placeholder="VAT registration number (optional)"
+              value={form.vat_number}
+              onChangeText={(v) => setField('vat_number', v)}
+              autoCapitalize="characters"
+              error={errors.vat_number}
             />
 
             <InputField
@@ -186,7 +309,29 @@ export default function EditProfileScreen({ navigation }) {
             />
           </GlassCard>
 
-          {/* Read-only fields */}
+          {/* ── How did you hear ── */}
+          <GlassCard style={styles.formCard}>
+            <Text style={styles.sectionLabel}>How Did You Hear About Us?</Text>
+            <View style={[styles.toggleRow, { flexWrap: 'wrap' }]}>
+              {HOW_HEAR_OPTIONS.map((opt) => {
+                const selected = form.how_did_you_hear === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() => setField('how_did_you_hear', opt.value)}
+                    activeOpacity={0.7}
+                    style={[styles.toggleBtn, selected && styles.toggleBtnSelected]}
+                  >
+                    <Text style={[styles.toggleBtnText, selected && styles.toggleBtnTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </GlassCard>
+
+          {/* ── Account (read-only) ── */}
           <GlassCard style={styles.formCard}>
             <Text style={styles.sectionLabel}>Account</Text>
             <View style={styles.readonlyField}>
@@ -213,14 +358,11 @@ export default function EditProfileScreen({ navigation }) {
           {/* Save Button */}
           <TouchableOpacity
             onPress={handleSave}
-            disabled={loading || !hasChanges}
+            disabled={loading}
             activeOpacity={0.8}
             style={{ marginTop: 8 }}
           >
-            <LinearGradient
-              colors={hasChanges ? ['#6366f1', '#8b5cf6'] : ['#374151', '#1f2937']}
-              style={styles.saveBtn}
-            >
+            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.saveBtn}>
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -231,10 +373,6 @@ export default function EditProfileScreen({ navigation }) {
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          {!hasChanges && (
-            <Text style={styles.noChangesHint}>No changes to save</Text>
-          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -294,6 +432,23 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, color: colors.text, fontSize: 15, padding: 13, paddingLeft: 0 },
   inputError: { color: colors.destructive, fontSize: 12, marginTop: 4 },
 
+  // Toggle buttons
+  toggleRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  toggleBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.inputBg,
+  },
+  toggleBtnSelected: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(99,102,241,0.15)',
+  },
+  toggleBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
+  toggleBtnTextSelected: { color: colors.primary, fontWeight: '600' },
+
   readonlyField: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,5 +479,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
-  noChangesHint: { textAlign: 'center', color: colors.textMuted, fontSize: 13, marginTop: 8 },
 });

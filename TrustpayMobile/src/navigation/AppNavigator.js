@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -19,6 +20,8 @@ import NewTransactionScreen from '../screens/main/NewTransactionScreen';
 import PaymentsScreen from '../screens/main/PaymentsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import EditProfileScreen from '../screens/main/EditProfileScreen';
+import FAQScreen from '../screens/main/FAQScreen';
+import TermsScreen from '../screens/main/TermsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,7 +55,17 @@ function HomeStack() {
   );
 }
 
-// ── Transactions Stack ─────────────────────────────────────────────────────────
+// ── New Transaction Stack (used by the centre + tab) ──────────────────────────
+function NewStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="NewTransaction" component={NewTransactionScreen} />
+      <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// ── Transactions Stack (accessible from Dashboard "View all") ─────────────────
 function TransactionsStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -68,7 +81,29 @@ function ProfileStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
+      <Stack.Screen name="Terms" component={TermsScreen} />
     </Stack.Navigator>
+  );
+}
+
+// ── Custom New+ centre button ──────────────────────────────────────────────────
+function NewTabButton({ onPress }) {
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={tabStyles.newBtnContainer}
+    >
+      <View style={tabStyles.newBtnShadow}>
+        <LinearGradient
+          colors={['#6366f1', '#8b5cf6']}
+          style={tabStyles.newBtnGradient}
+        >
+          <Feather name="plus" size={26} color="#fff" />
+        </LinearGradient>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -82,17 +117,16 @@ function MainTabs() {
           backgroundColor: '#0a0a0f',
           borderTopColor: 'rgba(255,255,255,0.08)',
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 72,
+          paddingBottom: 16,
+          paddingTop: 10,
         },
         tabBarActiveTintColor: '#6366f1',
         tabBarInactiveTintColor: '#64748b',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarIcon: ({ color, size }) => {
           const icons = {
             Home: 'home',
-            Transactions: 'list',
             Payments: 'credit-card',
             Profile: 'user',
           };
@@ -101,7 +135,15 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Transactions" component={TransactionsStack} />
+      <Tab.Screen
+        name="New"
+        component={NewStack}
+        options={{
+          tabBarLabel: '',
+          tabBarIcon: () => null,
+          tabBarButton: (props) => <NewTabButton onPress={props.onPress} />,
+        }}
+      />
       <Tab.Screen name="Payments" component={PaymentsScreen} />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
@@ -112,7 +154,6 @@ function MainTabs() {
 export default function AppNavigator() {
   const { user, isLoadingAuth, isAuthenticated, onboardingDone, isLoadingOnboarding } = useAuth();
 
-  // Show spinner while auth or onboarding state is loading
   if (isLoadingAuth || isLoadingOnboarding) {
     return (
       <View style={styles.loadingContainer}>
@@ -121,17 +162,14 @@ export default function AppNavigator() {
     );
   }
 
-  // Onboarding has not been seen yet — show it before anything else
   if (!onboardingDone) {
     return <OnboardingStack />;
   }
 
-  // Onboarding done but not authenticated → show auth screens
   if (!isAuthenticated) {
     return <AuthStack />;
   }
 
-  // Authenticated but no plan selected yet
   if (!user?.plan) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -140,9 +178,32 @@ export default function AppNavigator() {
     );
   }
 
-  // Fully set up → Main App
   return <MainTabs />;
 }
+
+const tabStyles = StyleSheet.create({
+  newBtnContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newBtnShadow: {
+    marginTop: -18,
+    borderRadius: 30,
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  newBtnGradient: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 const styles = StyleSheet.create({
   loadingContainer: {

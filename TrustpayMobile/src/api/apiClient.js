@@ -98,6 +98,8 @@ export const authApi = {
   register: (data) => api.post('/api/auth/register', data, false),
   getMe: () => api.get('/api/auth/me'),
   updateMe: (data) => api.put('/api/auth/me', data),
+  deleteMe: () => api.delete('/api/auth/me'),
+  lookupUser: (username) => api.get(`/api/user/lookup?username=${encodeURIComponent(username)}`),
 };
 
 // Transaction endpoints

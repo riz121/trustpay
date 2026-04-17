@@ -16,9 +16,9 @@ const SLIDES = [
     icon: 'shield',
     iconColor: '#6366f1',
     bg: 'rgba(99,102,241,0.15)',
-    title: 'Secure Escrow',
+    title: 'Secure Payments',
     description:
-      'TrustPay holds funds securely in escrow until both parties confirm the transaction. No more payment disputes.',
+      'TrustPay holds funds securely until both parties confirm the transaction. No more payment disputes.',
   },
   {
     id: '2',

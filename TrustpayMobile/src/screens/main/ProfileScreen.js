@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
+import { transactionApi, authApi } from '../../api/apiClient';
 import GlassCard from '../../components/GlassCard';
 import { colors } from '../../theme/colors';
 
@@ -17,7 +19,11 @@ function getPlanBadge(plan) {
       return { label: 'Pro', bg: 'rgba(167,139,250,0.2)', color: colors.accent };
     case 'free':
     default:
-      return { label: plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : 'Free', bg: 'rgba(100,116,139,0.2)', color: colors.textMuted };
+      return {
+        label: plan ? plan.charAt(0).toUpperCase() + plan.slice(1) : 'Free',
+        bg: 'rgba(100,116,139,0.2)',
+        color: colors.textMuted,
+      };
   }
 }
 
@@ -48,38 +54,57 @@ function MenuItem({ icon, label, onPress, color, showChevron = true }) {
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
 
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: transactionApi.getAll,
+  });
+
+  const stats = useMemo(() => {
+    const myTx = transactions.filter(
+      (t) => t.sender_email === user?.email || t.receiver_email === user?.email
+    );
+    const active = myTx.filter(
+      (t) => !['released', 'cancelled', 'disputed'].includes(t.status)
+    ).length;
+    const totalVolume = myTx.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    return { total: myTx.length, active, totalVolume };
+  }, [transactions, user?.email]);
+
   const initials = getInitials(user?.full_name, user?.email);
   const planBadge = getPlanBadge(user?.plan);
   const displayName = user?.full_name || user?.email?.split('@')[0] || 'User';
 
   const handleLogout = () => {
     Alert.alert(
-      'Logout',
-      'Are you sure you want to log out?',
+      'Sign Out',
+      'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => logout(),
-        },
+        { text: 'Sign Out', style: 'destructive', onPress: () => logout() },
       ]
     );
   };
 
-  const handleFAQ = () => {
+  const handleDeleteAccount = () => {
     Alert.alert(
-      'FAQ',
-      'TrustPay escrow service securely holds funds between buyers and sellers until all conditions are met. For more help, visit our website or contact support@trustpay.ae',
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleTerms = () => {
-    Alert.alert(
-      'Terms of Service',
-      'By using TrustPay, you agree to our Terms of Service. All escrow transactions are governed by UAE Commercial law. TrustPay acts as a neutral third-party custodian of funds.',
-      [{ text: 'OK' }]
+      'Delete Account?',
+      'This will permanently delete your account and all associated data. Active transactions may be affected. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authApi.deleteMe();
+            } catch {
+              // Proceed with logout regardless
+            } finally {
+              logout();
+            }
+          },
+        },
+      ]
     );
   };
 
@@ -87,6 +112,14 @@ export default function ProfileScreen({ navigation }) {
     Alert.alert(
       'Privacy Policy',
       'TrustPay collects and processes your personal data in accordance with the UAE Data Protection Law and GDPR. We do not share your data with third parties without your consent.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleSecurity = () => {
+    Alert.alert(
+      'Security',
+      'Your account is protected with AES-256 encryption and bank-level security. All funds are held in segregated accounts at a licensed UAE bank.',
       [{ text: 'OK' }]
     );
   };
@@ -107,6 +140,9 @@ export default function ProfileScreen({ navigation }) {
             </LinearGradient>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{displayName}</Text>
+              {user?.username ? (
+                <Text style={styles.profileUsername}>@{user.username}</Text>
+              ) : null}
               <Text style={styles.profileEmail} numberOfLines={1}>{user?.email || ''}</Text>
               <View style={[styles.planBadge, { backgroundColor: planBadge.bg }]}>
                 <Text style={[styles.planBadgeText, { color: planBadge.color }]}>
@@ -115,6 +151,16 @@ export default function ProfileScreen({ navigation }) {
               </View>
             </View>
           </View>
+
+          {/* Edit profile link */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('EditProfile')}
+            style={styles.editProfileBtn}
+            activeOpacity={0.7}
+          >
+            <Feather name="edit-2" size={12} color={colors.primary} />
+            <Text style={styles.editProfileText}>Edit Profile</Text>
+          </TouchableOpacity>
         </SafeAreaView>
       </LinearGradient>
 
@@ -122,30 +168,25 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Account Details Summary */}
-        {(user?.phone || user?.city || user?.company) && (
-          <GlassCard style={styles.detailsCard}>
-            <Text style={styles.detailsTitle}>Account Details</Text>
-            {user?.phone ? (
-              <View style={styles.detailRow}>
-                <Feather name="phone" size={15} color={colors.textMuted} />
-                <Text style={styles.detailText}>{user.phone}</Text>
-              </View>
-            ) : null}
-            {user?.city ? (
-              <View style={styles.detailRow}>
-                <Feather name="map-pin" size={15} color={colors.textMuted} />
-                <Text style={styles.detailText}>{user.city}</Text>
-              </View>
-            ) : null}
-            {user?.company ? (
-              <View style={styles.detailRow}>
-                <Feather name="briefcase" size={15} color={colors.textMuted} />
-                <Text style={styles.detailText}>{user.company}</Text>
-              </View>
-            ) : null}
+        {/* Stats Grid (matches web) */}
+        <View style={styles.statsRow}>
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.total}</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </GlassCard>
-        )}
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{stats.active}</Text>
+            <Text style={styles.statLabel}>Active</Text>
+          </GlassCard>
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {stats.totalVolume >= 1000
+                ? `${(stats.totalVolume / 1000).toFixed(1)}K`
+                : stats.totalVolume.toFixed(0)}
+            </Text>
+            <Text style={styles.statLabel}>Volume</Text>
+          </GlassCard>
+        </View>
 
         {/* Menu: Account */}
         <GlassCard style={styles.menuCard}>
@@ -157,35 +198,72 @@ export default function ProfileScreen({ navigation }) {
           />
           <View style={styles.menuDivider} />
           <MenuItem
+            icon="list"
+            label="Transaction History"
+            onPress={() => navigation.navigate('Home', { screen: 'Dashboard' })}
+          />
+          <View style={styles.menuDivider} />
+          <MenuItem
+            icon="credit-card"
+            label="Payments & Withdrawals"
+            onPress={() => navigation.navigate('Payments')}
+          />
+          <View style={styles.menuDivider} />
+          <MenuItem
             icon="shield"
             label="Security"
-            onPress={() => Alert.alert('Security', 'Your account is protected with bank-level security and encrypted data storage.')}
+            onPress={handleSecurity}
           />
         </GlassCard>
 
         {/* Menu: Support */}
         <GlassCard style={styles.menuCard}>
           <Text style={styles.menuGroupLabel}>Support</Text>
-          <MenuItem icon="help-circle" label="FAQ" onPress={handleFAQ} />
+          <MenuItem
+            icon="help-circle"
+            label="Help & FAQ"
+            onPress={() => navigation.navigate('FAQ')}
+          />
           <View style={styles.menuDivider} />
-          <MenuItem icon="file-text" label="Terms of Service" onPress={handleTerms} />
+          <MenuItem
+            icon="file-text"
+            label="Terms & Conditions"
+            onPress={() => navigation.navigate('Terms')}
+          />
           <View style={styles.menuDivider} />
-          <MenuItem icon="lock" label="Privacy Policy" onPress={handlePrivacy} />
+          <MenuItem
+            icon="lock"
+            label="Privacy Policy"
+            onPress={handlePrivacy}
+          />
         </GlassCard>
 
         {/* Logout */}
         <GlassCard style={styles.menuCard}>
           <MenuItem
             icon="log-out"
-            label="Logout"
+            label="Sign Out"
             onPress={handleLogout}
             color={colors.destructive}
             showChevron={false}
           />
         </GlassCard>
 
-        {/* Version */}
-        <Text style={styles.versionText}>TrustPay v1.0.0</Text>
+        {/* Delete Account */}
+        <TouchableOpacity
+          onPress={handleDeleteAccount}
+          activeOpacity={0.7}
+          style={styles.deleteBtn}
+        >
+          <Feather name="trash-2" size={16} color={colors.textMuted} />
+          <Text style={styles.deleteBtnText}>Delete Account</Text>
+        </TouchableOpacity>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>TrustPay · UAE</Text>
+          <Text style={styles.footerSubText}>Secure payments, simplified</Text>
+        </View>
       </ScrollView>
     </View>
   );
@@ -194,16 +272,11 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
-  header: { paddingBottom: 24 },
+  header: { paddingBottom: 16 },
   headerContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
 
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 16,
-  },
+  profileCard: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, gap: 16 },
   avatarCircle: {
     width: 72,
     height: 72,
@@ -212,18 +285,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitials: { color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: 1 },
-  profileInfo: { flex: 1 },
+  profileInfo: { flex: 1, paddingTop: 4 },
   profileName: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 2 },
-  profileEmail: { color: colors.textMuted, fontSize: 14, marginBottom: 8 },
+  profileUsername: { color: colors.primary, fontSize: 13, fontWeight: '600', marginBottom: 2 },
+  profileEmail: { color: colors.textMuted, fontSize: 13, marginBottom: 8 },
   planBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   planBadgeText: { fontSize: 12, fontWeight: '700' },
 
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    marginTop: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(99,102,241,0.1)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.2)',
+  },
+  editProfileText: { color: colors.primary, fontSize: 12, fontWeight: '600' },
+
   scroll: { padding: 16, paddingBottom: 40 },
 
-  detailsCard: { marginBottom: 12, padding: 16 },
-  detailsTitle: { color: colors.text, fontSize: 14, fontWeight: '700', marginBottom: 12 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  detailText: { color: colors.textSecondary, fontSize: 14 },
+  // Stats grid
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  statCard: { flex: 1, alignItems: 'center', padding: 16 },
+  statValue: { color: colors.text, fontSize: 22, fontWeight: '800', marginBottom: 4 },
+  statLabel: {
+    color: colors.textMuted,
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
 
   menuCard: { marginBottom: 12, padding: 0, overflow: 'hidden' },
   menuGroupLabel: {
@@ -254,5 +350,17 @@ const styles = StyleSheet.create({
   menuChevron: { marginLeft: 'auto' },
   menuDivider: { height: 1, backgroundColor: colors.border, marginLeft: 64 },
 
-  versionText: { textAlign: 'center', color: colors.textMuted, fontSize: 12, marginTop: 8 },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    marginBottom: 8,
+  },
+  deleteBtnText: { color: colors.textMuted, fontSize: 14 },
+
+  footer: { alignItems: 'center', marginTop: 8 },
+  footerText: { color: colors.textMuted, fontSize: 11 },
+  footerSubText: { color: colors.textMuted, fontSize: 10, opacity: 0.5, marginTop: 2 },
 });

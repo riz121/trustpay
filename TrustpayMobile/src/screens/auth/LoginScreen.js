@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 
 const FEATURES = [
-  { icon: 'shield', text: 'Secure Escrow Payments' },
+  { icon: 'shield', text: 'Secure Protected Payments' },
   { icon: 'zap', text: 'Instant Fund Transfers' },
   { icon: 'check-circle', text: 'Dispute Resolution' },
   { icon: 'lock', text: 'Bank-level Security' },
@@ -19,7 +19,7 @@ const FEATURES = [
 export default function LoginScreen({ navigation }) {
   const { login, register } = useAuth();
   const [mode, setMode] = useState('landing'); // landing | signin | register | verify
-  const [form, setForm] = useState({ full_name: '', email: '', password: '', otp: '' });
+  const [form, setForm] = useState({ full_name: '', username: '', email: '', password: '', otp: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,10 +56,19 @@ export default function LoginScreen({ navigation }) {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (form.username.trim() && !/^[a-z0-9_]{3,30}$/.test(form.username.trim())) {
+      setError('Username can only contain lowercase letters, numbers, and underscores (3–30 chars).');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const data = await register(form.full_name.trim(), form.email.trim(), form.password);
+      const data = await register(
+        form.full_name.trim(),
+        form.email.trim(),
+        form.password,
+        form.username.trim() || undefined,
+      );
       if (data.requires_verification) {
         setRequiresVerification(true);
         setMode('verify');
@@ -108,7 +117,7 @@ export default function LoginScreen({ navigation }) {
                 <Feather name="shield" size={32} color="#fff" />
               </LinearGradient>
               <Text style={styles.appName}>TrustPay</Text>
-              <Text style={styles.tagline}>Secure Escrow for the Digital Age</Text>
+              <Text style={styles.tagline}>The Smarter Way to Pay in the UAE</Text>
             </View>
 
             <View style={styles.featuresContainer}>
@@ -194,6 +203,25 @@ export default function LoginScreen({ navigation }) {
                       value={form.full_name}
                       onChangeText={(v) => setField('full_name', v)}
                       autoCapitalize="words"
+                      returnKeyType="next"
+                    />
+                  </View>
+                </View>
+              )}
+
+              {mode === 'register' && (
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>@Username <Text style={{ color: colors.textMuted, fontSize: 12 }}>(optional)</Text></Text>
+                  <View style={styles.inputWrapper}>
+                    <Feather name="at-sign" size={18} color={colors.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                      style={styles.textInput}
+                      placeholder="yourname"
+                      placeholderTextColor={colors.textMuted}
+                      value={form.username}
+                      onChangeText={(v) => setField('username', v.replace(/[^a-z0-9_]/g, '').toLowerCase())}
+                      autoCapitalize="none"
+                      autoCorrect={false}
                       returnKeyType="next"
                     />
                   </View>

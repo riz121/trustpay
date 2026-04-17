@@ -37,6 +37,8 @@ export default function TransactionDetailScreen({ navigation, route }) {
     queryKey: ['transaction', transactionId],
     queryFn: () => transactionApi.getById(transactionId),
     initialData: initialData ? initialData : undefined,
+    // Keep previous data during refetch to prevent blank screen
+    placeholderData: (prev) => prev,
     enabled: !!transactionId,
   });
 
@@ -149,7 +151,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {/* Amount Card */}
         <LinearGradient colors={['#1a1a2e', '#0f0f1a']} style={styles.amountCard}>
-          <Text style={styles.amountLabel}>Escrow Amount</Text>
+          <Text style={styles.amountLabel}>Transaction Amount</Text>
           <Text style={styles.amountValue}>AED {formatAmount(transaction.amount)}</Text>
           <View style={styles.statusRow}>
             <StatusBadge status={transaction.status} size="lg" />
