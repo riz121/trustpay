@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 
@@ -26,7 +27,7 @@ const PLANS = [
     price: 'AED 49',
     period: '/month',
     color: colors.primary,
-    gradient: ['#6366f1', '#8b5cf6'],
+    gradient: ['#059669', '#10b981'],
     features: ['50 transactions/month', 'Priority dispute resolution', '24/7 support', 'Lower fees'],
     popular: true,
   },
@@ -47,11 +48,12 @@ export default function SelectPlanScreen({ navigation }) {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('standard');
   const [profile, setProfile] = useState({
-    username: '',
     phone: '', city: '', company: '', emirates_id: '',
     date_of_birth: '', address: '', gender: '', accountType: 'individual',
-    country: '', howDidYouHear: '', vatNumber: '',
+    country: '', howDidYouHear: '', howDidYouHearOther: '', vatNumber: '',
   });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerValue, setDatePickerValue] = useState(new Date(2000, 0, 1));
   const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '', name: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -67,11 +69,16 @@ export default function SelectPlanScreen({ navigation }) {
 
   const validateProfile = () => {
     const e = {};
-    if (profile.username.trim() && !/^[a-z0-9_]{3,30}$/.test(profile.username.trim())) {
-      e.username = 'Only lowercase letters, numbers, underscores (3–30 chars)';
-    }
     if (!profile.phone.trim()) e.phone = 'Phone number is required';
     if (!profile.city.trim()) e.city = 'City is required';
+    if (!profile.date_of_birth.trim()) e.date_of_birth = 'Date of birth is required';
+    if (!profile.address.trim()) e.address = 'Address is required';
+    if (!profile.gender) e.gender = 'Please select your gender';
+    if (!profile.country.trim()) e.country = 'Country is required';
+    if (!profile.howDidYouHear) e.howDidYouHear = 'Please tell us how you heard about us';
+    if (profile.howDidYouHear === 'Other' && !profile.howDidYouHearOther.trim()) {
+      e.howDidYouHearOther = 'Please specify how you heard about us';
+    }
     return e;
   };
 
@@ -107,20 +114,22 @@ export default function SelectPlanScreen({ navigation }) {
   const finishSetup = async () => {
     setLoading(true);
     try {
+      const howHear = profile.howDidYouHear === 'Other'
+        ? profile.howDidYouHearOther.trim()
+        : profile.howDidYouHear;
       await updateUser({
         full_name: user?.full_name,
-        username: profile.username.trim() || undefined,
         phone: profile.phone.trim(),
         city: profile.city.trim(),
-        company: profile.company.trim(),
-        emirates_id: profile.emirates_id.trim(),
+        company: profile.company.trim() || undefined,
+        emirates_id: profile.emirates_id.trim() || undefined,
         date_of_birth: profile.date_of_birth.trim(),
         address: profile.address.trim(),
         gender: profile.gender,
         account_type: profile.accountType,
         country: profile.country.trim(),
-        how_did_you_hear: profile.howDidYouHear,
-        vat_number: profile.vatNumber.trim(),
+        how_did_you_hear: howHear || undefined,
+        vat_number: profile.vatNumber.trim() || undefined,
         plan: selectedPlan,
         plan_selected_at: new Date().toISOString(),
       });
@@ -217,16 +226,6 @@ export default function SelectPlanScreen({ navigation }) {
                 <Text style={styles.sectionTitle}>Tell us about yourself</Text>
                 <View style={styles.formCard}>
                   <InputField
-                    label="@Username (Optional)"
-                    icon="at-sign"
-                    placeholder="yourname"
-                    value={profile.username}
-                    onChangeText={(v) => setProfileField('username', v.replace(/[^a-z0-9_]/g, '').toLowerCase())}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    error={errors.username}
-                  />
-                  <InputField
                     label="Phone Number *"
                     icon="phone"
                     placeholder="+971 50 123 4567"
@@ -244,38 +243,33 @@ export default function SelectPlanScreen({ navigation }) {
                     error={errors.city}
                   />
                   <InputField
-                    label="Company (Optional)"
-                    icon="briefcase"
-                    placeholder="Your company name"
-                    value={profile.company}
-                    onChangeText={(v) => setProfileField('company', v)}
+                    label="Country *"
+                    icon="globe"
+                    placeholder="e.g. United Arab Emirates"
+                    value={profile.country}
+                    onChangeText={(v) => setProfileField('country', v)}
+                    autoCapitalize="words"
+                    error={errors.country}
                   />
-                  <InputField
-                    label="Emirates ID (Optional)"
-                    icon="credit-card"
-                    placeholder="784-XXXX-XXXXXXX-X"
-                    value={profile.emirates_id}
-                    onChangeText={(v) => setProfileField('emirates_id', v)}
-                    keyboardType="number-pad"
-                  />
-                  <InputField
-                    label="Date of Birth (Optional)"
-                    icon="calendar"
-                    placeholder="DD/MM/YYYY"
+                  <DatePickerField
+                    label="Date of Birth *"
                     value={profile.date_of_birth}
-                    onChangeText={(v) => setProfileField('date_of_birth', v)}
+                    onPress={() => setShowDatePicker(true)}
+                    error={errors.date_of_birth}
                   />
                   <InputField
-                    label="Address (Optional)"
-                    icon="map-pin"
+                    label="Address *"
+                    icon="home"
                     placeholder="Street, area, city"
                     value={profile.address}
                     onChangeText={(v) => setProfileField('address', v)}
+                    autoCapitalize="sentences"
+                    error={errors.address}
                   />
 
                   {/* Gender */}
                   <View style={{ marginBottom: 14 }}>
-                    <Text style={inputStyles.label}>Gender (Optional)</Text>
+                    <Text style={inputStyles.label}>Gender *</Text>
                     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                       {['Male', 'Female', 'Other'].map((option) => (
                         <TouchableOpacity
@@ -287,7 +281,7 @@ export default function SelectPlanScreen({ navigation }) {
                             borderRadius: 10,
                             borderWidth: 1.5,
                             borderColor: profile.gender === option ? colors.primary : colors.inputBorder,
-                            backgroundColor: profile.gender === option ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                            backgroundColor: profile.gender === option ? 'rgba(16,185,129,0.15)' : colors.inputBg,
                           }}
                         >
                           <Text style={{ color: profile.gender === option ? colors.primary : colors.textMuted, fontWeight: '600' }}>
@@ -296,11 +290,12 @@ export default function SelectPlanScreen({ navigation }) {
                         </TouchableOpacity>
                       ))}
                     </View>
+                    {errors.gender ? <Text style={inputStyles.errorText}>{errors.gender}</Text> : null}
                   </View>
 
                   {/* Account Type */}
                   <View style={{ marginBottom: 14 }}>
-                    <Text style={inputStyles.label}>Account Type</Text>
+                    <Text style={inputStyles.label}>Account Type *</Text>
                     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                       {['Individual', 'Organisation'].map((option) => {
                         const val = option.toLowerCase();
@@ -314,7 +309,7 @@ export default function SelectPlanScreen({ navigation }) {
                               borderRadius: 10,
                               borderWidth: 1.5,
                               borderColor: profile.accountType === val ? colors.primary : colors.inputBorder,
-                              backgroundColor: profile.accountType === val ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                              backgroundColor: profile.accountType === val ? 'rgba(16,185,129,0.15)' : colors.inputBg,
                             }}
                           >
                             <Text style={{ color: profile.accountType === val ? colors.primary : colors.textMuted, fontWeight: '600' }}>
@@ -326,17 +321,9 @@ export default function SelectPlanScreen({ navigation }) {
                     </View>
                   </View>
 
-                  <InputField
-                    label="Country (Optional)"
-                    icon="globe"
-                    placeholder="e.g. United Arab Emirates"
-                    value={profile.country}
-                    onChangeText={(v) => setProfileField('country', v)}
-                  />
-
                   {/* How did you hear about us */}
                   <View style={{ marginBottom: 14 }}>
-                    <Text style={inputStyles.label}>How did you hear about us? (Optional)</Text>
+                    <Text style={inputStyles.label}>How did you hear about us? *</Text>
                     <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                       {['Social Media', 'Friend', 'Google', 'App Store', 'Other'].map((option) => (
                         <TouchableOpacity
@@ -348,7 +335,7 @@ export default function SelectPlanScreen({ navigation }) {
                             borderRadius: 10,
                             borderWidth: 1.5,
                             borderColor: profile.howDidYouHear === option ? colors.primary : colors.inputBorder,
-                            backgroundColor: profile.howDidYouHear === option ? 'rgba(99,102,241,0.15)' : colors.inputBg,
+                            backgroundColor: profile.howDidYouHear === option ? 'rgba(16,185,129,0.15)' : colors.inputBg,
                           }}
                         >
                           <Text style={{ color: profile.howDidYouHear === option ? colors.primary : colors.textMuted, fontWeight: '600' }}>
@@ -357,14 +344,45 @@ export default function SelectPlanScreen({ navigation }) {
                         </TouchableOpacity>
                       ))}
                     </View>
+                    {errors.howDidYouHear ? <Text style={inputStyles.errorText}>{errors.howDidYouHear}</Text> : null}
+                    {profile.howDidYouHear === 'Other' && (
+                      <View style={[inputStyles.wrapper, { marginTop: 10, borderColor: errors.howDidYouHearOther ? colors.destructive : colors.inputBorder }]}>
+                        <Feather name="edit-2" size={18} color={colors.textMuted} style={inputStyles.icon} />
+                        <TextInput
+                          style={inputStyles.input}
+                          placeholder="Please specify..."
+                          placeholderTextColor={colors.textMuted}
+                          value={profile.howDidYouHearOther}
+                          onChangeText={(v) => setProfileField('howDidYouHearOther', v)}
+                          autoCapitalize="sentences"
+                        />
+                      </View>
+                    )}
+                    {errors.howDidYouHearOther ? <Text style={inputStyles.errorText}>{errors.howDidYouHearOther}</Text> : null}
                   </View>
 
+                  <InputField
+                    label="Company (Optional)"
+                    icon="briefcase"
+                    placeholder="Your company name"
+                    value={profile.company}
+                    onChangeText={(v) => setProfileField('company', v)}
+                    autoCapitalize="words"
+                  />
                   <InputField
                     label="VAT Number (Optional)"
                     icon="hash"
                     placeholder="e.g. 100123456789003"
                     value={profile.vatNumber}
                     onChangeText={(v) => setProfileField('vatNumber', v)}
+                  />
+                  <InputField
+                    label="Emirates ID (Optional)"
+                    icon="credit-card"
+                    placeholder="784-XXXX-XXXXXXX-X"
+                    value={profile.emirates_id}
+                    onChangeText={(v) => setProfileField('emirates_id', v)}
+                    keyboardType="number-pad"
                   />
                 </View>
               </View>
@@ -440,7 +458,7 @@ export default function SelectPlanScreen({ navigation }) {
             )}
 
             <TouchableOpacity onPress={next} activeOpacity={0.8} disabled={loading} style={{ marginTop: 16 }}>
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.nextBtn}>
+              <LinearGradient colors={['#059669', '#10b981']} style={styles.nextBtn}>
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
@@ -455,8 +473,79 @@ export default function SelectPlanScreen({ navigation }) {
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        {/* Date Picker — iOS modal, Android dialog */}
+        {Platform.OS === 'android' && showDatePicker && (
+          <DateTimePicker
+            value={datePickerValue}
+            mode="date"
+            display="default"
+            maximumDate={new Date()}
+            onChange={(event, selected) => {
+              setShowDatePicker(false);
+              if (event.type === 'set' && selected) {
+                setDatePickerValue(selected);
+                const iso = selected.toISOString().split('T')[0];
+                setProfileField('date_of_birth', iso);
+              }
+            }}
+          />
+        )}
+        {Platform.OS === 'ios' && (
+          <Modal visible={showDatePicker} transparent animationType="slide">
+            <View style={styles.dateModalOverlay}>
+              <View style={styles.dateModalSheet}>
+                <View style={styles.dateModalHeader}>
+                  <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                    <Text style={styles.dateModalCancel}>Cancel</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.dateModalTitle}>Date of Birth</Text>
+                  <TouchableOpacity onPress={() => {
+                    const iso = datePickerValue.toISOString().split('T')[0];
+                    setProfileField('date_of_birth', iso);
+                    setShowDatePicker(false);
+                  }}>
+                    <Text style={styles.dateModalDone}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+                <DateTimePicker
+                  value={datePickerValue}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date()}
+                  textColor={colors.text}
+                  onChange={(_, selected) => { if (selected) setDatePickerValue(selected); }}
+                  style={{ height: 200 }}
+                />
+              </View>
+            </View>
+          </Modal>
+        )}
       </SafeAreaView>
     </LinearGradient>
+  );
+}
+
+function DatePickerField({ label, value, onPress, error }) {
+  const display = value
+    ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '';
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text style={inputStyles.label}>{label}</Text>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        style={[inputStyles.wrapper, error && inputStyles.wrapperError]}
+      >
+        <Feather name="calendar" size={18} color={colors.textMuted} style={inputStyles.icon} />
+        <Text style={[inputStyles.input, { lineHeight: 48, color: value ? colors.text : colors.textMuted }]}>
+          {display || 'Select date'}
+        </Text>
+        <Feather name="chevron-down" size={16} color={colors.textMuted} style={{ marginRight: 14 }} />
+      </TouchableOpacity>
+      {error ? <Text style={inputStyles.errorText}>{error}</Text> : null}
+    </View>
   );
 }
 
@@ -493,7 +582,7 @@ const styles = StyleSheet.create({
   stepsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8, marginTop: 8 },
   stepCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   stepActive: { backgroundColor: colors.primary },
-  stepInactive: { backgroundColor: 'rgba(99,102,241,0.15)', borderWidth: 1, borderColor: colors.border },
+  stepInactive: { backgroundColor: 'rgba(16,185,129,0.15)', borderWidth: 1, borderColor: colors.border },
   stepNum: { fontSize: 14, fontWeight: '700' },
   stepNumActive: { color: '#fff' },
   stepNumInactive: { color: colors.textMuted },
@@ -504,7 +593,7 @@ const styles = StyleSheet.create({
   stepContent: { marginBottom: 8 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 16 },
   planCard: { backgroundColor: 'rgba(26,26,46,0.8)', borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 12 },
-  popularBadge: { backgroundColor: 'rgba(99,102,241,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start', marginBottom: 8 },
+  popularBadge: { backgroundColor: 'rgba(16,185,129,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start', marginBottom: 8 },
   popularText: { color: colors.primary, fontSize: 11, fontWeight: '600' },
   planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
   planName: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
@@ -526,4 +615,10 @@ const styles = StyleSheet.create({
   secureText: { color: colors.emerald, fontSize: 13 },
   nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 14, padding: 16, gap: 8 },
   nextBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  dateModalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  dateModalSheet: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 30 },
+  dateModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
+  dateModalTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  dateModalCancel: { color: colors.textMuted, fontSize: 16 },
+  dateModalDone: { color: colors.primary, fontSize: 16, fontWeight: '700' },
 });

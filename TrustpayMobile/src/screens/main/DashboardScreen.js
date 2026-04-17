@@ -64,18 +64,23 @@ export default function DashboardScreen({ navigation }) {
     <View style={styles.container}>
       <LinearGradient colors={['#1a1a2e', '#0a0a0f']} style={styles.header}>
         <SafeAreaView edges={['top']}>
+          {/* ── Free plan upgrade banner ── */}
+          {(!user?.plan || user.plan === 'free') && (
+            <TouchableOpacity activeOpacity={0.85} style={styles.upgradeBanner}>
+              <Feather name="zap" size={13} color="#0a0a0f" style={{ marginRight: 6 }} />
+              <Text style={styles.upgradeBannerText}>
+                You're on the Free plan (3 tx limit).{'  '}
+                <Text style={styles.upgradeBannerLink}>Upgrade now →</Text>
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.headerContent}>
             <View>
               <Text style={styles.greeting}>{getGreeting()},</Text>
               <Text style={styles.userName}>{firstName}</Text>
             </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('NewTransaction')}
-              style={styles.newBtn}
-            >
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.newBtnGradient}>
-                <Feather name="plus" size={20} color="#fff" />
-              </LinearGradient>
+            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7}>
+              <Feather name="bell" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -119,7 +124,7 @@ export default function DashboardScreen({ navigation }) {
               </View>
             </View>
             <View style={styles.balanceStat}>
-              <View style={[styles.balanceStatIcon, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
+              <View style={[styles.balanceStatIcon, { backgroundColor: 'rgba(52,211,153,0.15)' }]}>
                 <Feather name="arrow-up-right" size={14} color={colors.accent} />
               </View>
               <View>
@@ -140,7 +145,7 @@ export default function DashboardScreen({ navigation }) {
         >
           <GlassCard style={styles.newTxCardInner}>
             <View style={styles.newTxIconWrap}>
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.newTxIcon}>
+              <LinearGradient colors={['#059669', '#10b981']} style={styles.newTxIcon}>
                 <Feather name="plus" size={22} color="#fff" />
               </LinearGradient>
             </View>
@@ -161,7 +166,7 @@ export default function DashboardScreen({ navigation }) {
               onPress={() => navigation.navigate('NewTransaction')}
               activeOpacity={0.8}
             >
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.quickActionIcon}>
+              <LinearGradient colors={['#059669', '#10b981']} style={styles.quickActionIcon}>
                 <Feather name="plus-circle" size={22} color="#fff" />
               </LinearGradient>
               <Text style={styles.quickActionText}>New</Text>
@@ -171,7 +176,7 @@ export default function DashboardScreen({ navigation }) {
               onPress={() => navigation.navigate('Transactions')}
               activeOpacity={0.8}
             >
-              <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(167,139,250,0.15)', borderWidth: 1, borderColor: 'rgba(167,139,250,0.3)' }]}>
+              <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(52,211,153,0.15)', borderWidth: 1, borderColor: 'rgba(52,211,153,0.3)' }]}>
                 <Feather name="list" size={22} color={colors.accent} />
               </View>
               <Text style={styles.quickActionText}>History</Text>
@@ -223,7 +228,7 @@ export default function DashboardScreen({ navigation }) {
                   onPress={() => navigation.navigate('NewTransaction')}
                   activeOpacity={0.8}
                 >
-                  <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyBtnGradient}>
+                  <LinearGradient colors={['#059669', '#10b981']} style={styles.emptyBtnGradient}>
                     <Feather name="plus" size={16} color="#fff" />
                     <Text style={styles.emptyBtnText}>New Transaction</Text>
                   </LinearGradient>
@@ -263,9 +268,18 @@ const styles = StyleSheet.create({
   },
   greeting: { color: colors.textMuted, fontSize: 14 },
   userName: { color: colors.text, fontSize: 24, fontWeight: '700' },
-  newBtn: { borderRadius: 16, overflow: 'hidden' },
-  newBtnGradient: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: 16, paddingBottom: 32 },
+  bellBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
+  upgradeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  upgradeBannerText: { color: '#0a0a0f', fontSize: 13, fontWeight: '600', flex: 1 },
+  upgradeBannerLink: { fontWeight: '800', textDecorationLine: 'underline' },
+
+  scroll: { padding: 16, paddingBottom: 100 },
 
   // Balance card (web-style)
   balanceCard: { marginBottom: 14, padding: 24, overflow: 'hidden' },
@@ -276,7 +290,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: 'rgba(99,102,241,0.08)',
+    backgroundColor: 'rgba(16,185,129,0.08)',
   },
   orbBottomLeft: {
     position: 'absolute',
@@ -285,7 +299,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: 'rgba(167,139,250,0.08)',
+    backgroundColor: 'rgba(52,211,153,0.08)',
   },
   balanceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
   balanceHeaderText: { color: colors.textMuted, fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
@@ -298,7 +312,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

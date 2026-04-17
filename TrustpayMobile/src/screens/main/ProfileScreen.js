@@ -14,9 +14,9 @@ import { colors } from '../../theme/colors';
 function getPlanBadge(plan) {
   switch ((plan || '').toLowerCase()) {
     case 'standard':
-      return { label: 'Standard', bg: 'rgba(99,102,241,0.2)', color: colors.primary };
+      return { label: 'Standard', bg: 'rgba(16,185,129,0.2)', color: colors.primary };
     case 'pro':
-      return { label: 'Pro', bg: 'rgba(167,139,250,0.2)', color: colors.accent };
+      return { label: 'Pro', bg: 'rgba(52,211,153,0.2)', color: colors.accent };
     case 'free':
     default:
       return {
@@ -127,40 +127,41 @@ export default function ProfileScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {/* Header with gradient */}
-      <LinearGradient colors={['#1a1a2e', '#0a0a0f']} style={styles.header}>
+      <LinearGradient colors={['#0d1f17', '#0a0a0f']} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Profile</Text>
           </View>
 
-          {/* Avatar + User Info */}
+          {/* Centered Avatar + Info */}
           <View style={styles.profileCard}>
-            <LinearGradient colors={['#6366f1', '#a78bfa']} style={styles.avatarCircle}>
-              <Text style={styles.avatarInitials}>{initials}</Text>
-            </LinearGradient>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{displayName}</Text>
-              {user?.username ? (
-                <Text style={styles.profileUsername}>@{user.username}</Text>
-              ) : null}
-              <Text style={styles.profileEmail} numberOfLines={1}>{user?.email || ''}</Text>
-              <View style={[styles.planBadge, { backgroundColor: planBadge.bg }]}>
-                <Text style={[styles.planBadgeText, { color: planBadge.color }]}>
-                  {planBadge.label} Plan
-                </Text>
-              </View>
+            <View style={styles.avatarWrapper}>
+              <LinearGradient colors={['#059669', '#10b981']} style={styles.avatarCircle}>
+                <Text style={styles.avatarInitials}>{initials}</Text>
+              </LinearGradient>
+              <View style={styles.avatarRing} />
             </View>
-          </View>
 
-          {/* Edit profile link */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('EditProfile')}
-            style={styles.editProfileBtn}
-            activeOpacity={0.7}
-          >
-            <Feather name="edit-2" size={12} color={colors.primary} />
-            <Text style={styles.editProfileText}>Edit Profile</Text>
-          </TouchableOpacity>
+            <Text style={styles.profileName}>{displayName}</Text>
+            {user?.username ? (
+              <Text style={styles.profileUsername}>@{user.username}</Text>
+            ) : null}
+            <Text style={styles.profileEmail} numberOfLines={1}>{user?.email || ''}</Text>
+
+            <View style={styles.verifiedBadge}>
+              <Feather name="shield" size={11} color={colors.primary} />
+              <Text style={styles.verifiedText}>UAE VERIFIED</Text>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EditProfile')}
+              style={styles.editProfileBtn}
+              activeOpacity={0.7}
+            >
+              <Feather name="edit-2" size={13} color={colors.primary} />
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </LinearGradient>
 
@@ -276,38 +277,56 @@ const styles = StyleSheet.create({
   headerContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
 
-  profileCard: { flexDirection: 'row', alignItems: 'flex-start', paddingHorizontal: 20, gap: 16 },
+  profileCard: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 20 },
+  avatarWrapper: { position: 'relative', marginBottom: 14 },
   avatarCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitials: { color: '#fff', fontSize: 26, fontWeight: '800', letterSpacing: 1 },
-  profileInfo: { flex: 1, paddingTop: 4 },
-  profileName: { color: colors.text, fontSize: 20, fontWeight: '700', marginBottom: 2 },
-  profileUsername: { color: colors.primary, fontSize: 13, fontWeight: '600', marginBottom: 2 },
-  profileEmail: { color: colors.textMuted, fontSize: 13, marginBottom: 8 },
-  planBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  planBadgeText: { fontSize: 12, fontWeight: '700' },
+  avatarRing: {
+    position: 'absolute',
+    top: -3, left: -3,
+    width: 94, height: 94,
+    borderRadius: 47,
+    borderWidth: 2,
+    borderColor: 'rgba(16,185,129,0.35)',
+  },
+  avatarInitials: { color: '#fff', fontSize: 30, fontWeight: '800', letterSpacing: 1 },
+  profileName: { color: colors.text, fontSize: 22, fontWeight: '700', marginBottom: 4, textAlign: 'center' },
+  profileUsername: { color: colors.primary, fontSize: 14, fontWeight: '600', marginBottom: 4, textAlign: 'center' },
+  profileEmail: { color: colors.textMuted, fontSize: 13, marginBottom: 10, textAlign: 'center' },
+
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(16,185,129,0.1)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16,185,129,0.25)',
+    marginBottom: 14,
+  },
+  verifiedText: { color: colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
 
   editProfileBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    alignSelf: 'center',
-    marginTop: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(99,102,241,0.1)',
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 22,
     borderWidth: 1,
-    borderColor: 'rgba(99,102,241,0.2)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  editProfileText: { color: colors.primary, fontSize: 12, fontWeight: '600' },
+  editProfileText: { color: colors.text, fontSize: 13, fontWeight: '600' },
 
-  scroll: { padding: 16, paddingBottom: 40 },
+  scroll: { padding: 16, paddingBottom: 100 },
 
   // Stats grid
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },

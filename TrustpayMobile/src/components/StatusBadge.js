@@ -4,9 +4,9 @@ import { colors } from '../theme/colors';
 
 const STATUS_CONFIG = {
   pending_deposit: { label: 'Pending Deposit', color: colors.yellow, bg: 'rgba(251,191,36,0.15)' },
-  funded: { label: 'Funded', color: colors.primary, bg: 'rgba(99,102,241,0.15)' },
+  funded: { label: 'Funded', color: colors.primary, bg: 'rgba(16,185,129,0.15)' },
   sender_confirmed: { label: 'Sender Confirmed', color: colors.primaryLight, bg: 'rgba(129,140,248,0.15)' },
-  receiver_confirmed: { label: 'Receiver Confirmed', color: colors.accent, bg: 'rgba(167,139,250,0.15)' },
+  receiver_confirmed: { label: 'Receiver Confirmed', color: colors.accent, bg: 'rgba(52,211,153,0.15)' },
   released: { label: 'Released', color: colors.emerald, bg: 'rgba(52,211,153,0.15)' },
   disputed: { label: 'Disputed', color: colors.destructive, bg: 'rgba(239,68,68,0.15)' },
   cancelled: { label: 'Cancelled', color: colors.textMuted, bg: 'rgba(100,116,139,0.15)' },

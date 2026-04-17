@@ -109,7 +109,16 @@ export const transactionApi = {
   createEscrow: (data) => api.post('/api/functions/createEscrow', data),
   confirmEscrow: (transaction_id) => api.post('/api/functions/confirmEscrow', { transaction_id }),
   cancelEscrow: (transaction_id) => api.post('/api/functions/cancelEscrow', { transaction_id }),
-  disputeEscrow: (transaction_id, reason) => api.post('/api/functions/disputeEscrow', { transaction_id, reason }),
+  disputeEscrow: (transaction_id, reason, file_url) =>
+    api.post('/api/functions/disputeEscrow', { transaction_id, reason, ...(file_url && { file_url }) }),
+  uploadDisputeFile: async (fileUri, fileName, mimeType) => {
+    const formData = new FormData();
+    formData.append('file', { uri: fileUri, name: fileName, type: mimeType || 'application/octet-stream' });
+    const response = await api.post('/api/upload/dispute', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
 };
 
 // Bank account endpoints

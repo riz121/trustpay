@@ -131,7 +131,7 @@ export default function TransactionsScreen({ navigation }) {
               <Text style={styles.emptySubtitle}>
                 {search || statusFilter !== 'all'
                   ? 'Try adjusting your filters'
-                  : 'Create your first escrow transaction'}
+                  : 'Create your first transaction'}
               </Text>
             </View>
           }
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   clearSearch: { padding: 12 },
   filtersContent: { paddingHorizontal: 16, gap: 8, paddingBottom: 12 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
-  filterChipActive: { backgroundColor: 'rgba(99,102,241,0.2)', borderColor: colors.primary },
+  filterChipActive: { backgroundColor: 'rgba(16,185,129,0.2)', borderColor: colors.primary },
   filterChipText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   filterChipTextActive: { color: colors.primary },
   listContent: { padding: 16, paddingBottom: 32 },

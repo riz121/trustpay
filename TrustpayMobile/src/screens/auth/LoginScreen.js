@@ -10,10 +10,9 @@ import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 
 const FEATURES = [
-  { icon: 'shield', text: 'Secure Protected Payments' },
-  { icon: 'zap', text: 'Instant Fund Transfers' },
-  { icon: 'check-circle', text: 'Dispute Resolution' },
-  { icon: 'lock', text: 'Bank-level Security' },
+  { icon: 'shield', text: 'Funds held securely in UAE-regulated accounts' },
+  { icon: 'zap', text: 'Instant status updates for both parties' },
+  { icon: 'users', text: 'Trusted by buyers & sellers across the UAE' },
 ];
 
 export default function LoginScreen({ navigation }) {
@@ -109,47 +108,77 @@ export default function LoginScreen({ navigation }) {
 
   if (mode === 'landing') {
     return (
-      <LinearGradient colors={['#0a0a0f', '#1a1a2e', '#0a0a0f']} style={styles.gradient}>
+      <LinearGradient colors={['#0a0a0f', '#111827', '#0a0a0f']} style={styles.gradient}>
         <SafeAreaView style={styles.safe}>
-          <ScrollView contentContainerStyle={styles.landingScroll} showsVerticalScrollIndicator={false}>
-            <View style={styles.logoContainer}>
-              <LinearGradient colors={['#6366f1', '#a78bfa']} style={styles.logoGradient}>
-                <Feather name="shield" size={32} color="#fff" />
-              </LinearGradient>
-              <Text style={styles.appName}>TrustPay</Text>
-              <Text style={styles.tagline}>The Smarter Way to Pay in the UAE</Text>
+          {/* Ambient glow blobs */}
+          <View style={styles.glow1} pointerEvents="none" />
+          <View style={styles.glow2} pointerEvents="none" />
+
+          <View style={styles.landingInner}>
+            {/* Logo row */}
+            <View style={styles.logoRow}>
+              <View style={styles.logoIconBox}>
+                <Feather name="shield" size={24} color={colors.emerald} />
+              </View>
+              <View>
+                <Text style={styles.appName}>TrustPay</Text>
+                <Text style={styles.appRegion}>UAE</Text>
+              </View>
             </View>
 
+            {/* Hero */}
+            <View style={styles.hero}>
+              <View style={styles.secureBadge}>
+                <Feather name="lock" size={11} color={colors.emerald} />
+                <Text style={styles.secureBadgeText}>SECURE & TRUSTED</Text>
+              </View>
+
+              <Text style={styles.headline}>
+                The smarter way{'\n'}to pay in the{' '}
+                <Text style={styles.headlineAccent}>UAE</Text>
+              </Text>
+
+              <Text style={styles.subtitle}>
+                Payments that protect both buyer and seller — from freelance gigs to property deals.
+              </Text>
+            </View>
+
+            {/* Features */}
             <View style={styles.featuresContainer}>
               {FEATURES.map((f, i) => (
                 <View key={i} style={styles.featureRow}>
                   <View style={styles.featureIcon}>
-                    <Feather name={f.icon} size={18} color={colors.primary} />
+                    <Feather name={f.icon} size={16} color={colors.emerald} />
                   </View>
                   <Text style={styles.featureText}>{f.text}</Text>
                 </View>
               ))}
             </View>
 
+            {/* Buttons */}
             <View style={styles.landingButtons}>
               <TouchableOpacity
-                style={styles.primaryBtn}
+                style={styles.signInBtn}
                 onPress={() => setMode('signin')}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.gradientBtn}>
-                  <Text style={styles.primaryBtnText}>Sign In</Text>
-                </LinearGradient>
+                <Text style={styles.signInBtnText}>Sign In</Text>
+                <Feather name="arrow-right" size={18} color="#0a0a0f" />
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={styles.outlineBtn}
+                style={styles.createBtn}
                 onPress={() => setMode('register')}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <Text style={styles.outlineBtnText}>Create Account</Text>
+                <Text style={styles.createBtnText}>Create Account</Text>
               </TouchableOpacity>
+
+              <Text style={styles.legalText}>
+                By continuing you agree to our Terms of Service and Privacy Policy
+              </Text>
             </View>
-          </ScrollView>
+          </View>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -168,7 +197,7 @@ export default function LoginScreen({ navigation }) {
             </TouchableOpacity>
 
             <View style={styles.formHeader}>
-              <LinearGradient colors={['#6366f1', '#a78bfa']} style={styles.logoSmall}>
+              <LinearGradient colors={['#059669', '#10b981']} style={styles.logoSmall}>
                 <Feather name="shield" size={22} color="#fff" />
               </LinearGradient>
               <Text style={styles.formTitle}>
@@ -299,7 +328,7 @@ export default function LoginScreen({ navigation }) {
                 disabled={loading}
                 style={{ marginTop: 8 }}
               >
-                <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.submitBtn}>
+                <LinearGradient colors={['#059669', '#10b981']} style={styles.submitBtn}>
                   {loading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
@@ -339,22 +368,39 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safe: { flex: 1 },
-  landingScroll: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 40, justifyContent: 'center' },
+  glow1: { position: 'absolute', top: 60, left: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: 'rgba(52,211,153,0.06)' },
+  glow2: { position: 'absolute', top: '35%', right: -60, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(52,211,153,0.04)' },
+  landingInner: { flex: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 32, justifyContent: 'space-between' },
+
+  // Logo
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8 },
+  logoIconBox: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(52,211,153,0.12)', alignItems: 'center', justifyContent: 'center' },
+  appName: { fontSize: 18, fontWeight: '800', color: colors.text, letterSpacing: 0.3 },
+  appRegion: { fontSize: 10, color: colors.textMuted, letterSpacing: 3, textTransform: 'uppercase', marginTop: 1 },
+
+  // Hero
+  hero: { marginTop: 32 },
+  secureBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: 'rgba(52,211,153,0.3)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, alignSelf: 'flex-start', marginBottom: 20 },
+  secureBadgeText: { fontSize: 10, color: colors.emerald, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase' },
+  headline: { fontSize: 38, fontWeight: '800', color: colors.text, lineHeight: 46, marginBottom: 14 },
+  headlineAccent: { color: colors.emerald },
+  subtitle: { fontSize: 15, color: colors.textMuted, lineHeight: 23 },
+
+  // Features
+  featuresContainer: { gap: 10, marginTop: 28 },
+  featureRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 14, padding: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)' },
+  featureIcon: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(52,211,153,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  featureText: { color: colors.textSecondary, fontSize: 14, flex: 1, lineHeight: 20 },
+
+  // Buttons
+  landingButtons: { gap: 12, marginTop: 32 },
+  signInBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.emerald, borderRadius: 16, paddingVertical: 17 },
+  signInBtnText: { color: '#0a0a0f', fontSize: 16, fontWeight: '800' },
+  createBtn: { backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderRadius: 16, paddingVertical: 17, alignItems: 'center' },
+  createBtnText: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  legalText: { textAlign: 'center', color: colors.textMuted, fontSize: 11, lineHeight: 16 },
+
   formScroll: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20 },
-  logoContainer: { alignItems: 'center', marginBottom: 48 },
-  logoGradient: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  appName: { fontSize: 36, fontWeight: '800', color: colors.text, letterSpacing: 1, marginBottom: 8 },
-  tagline: { fontSize: 16, color: colors.textMuted, textAlign: 'center' },
-  featuresContainer: { gap: 14, marginBottom: 48 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(26,26,46,0.6)', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: colors.border },
-  featureIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(99,102,241,0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  featureText: { color: colors.text, fontSize: 15, fontWeight: '500' },
-  landingButtons: { gap: 12 },
-  primaryBtn: { borderRadius: 14, overflow: 'hidden' },
-  gradientBtn: { padding: 16, alignItems: 'center', borderRadius: 14 },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  outlineBtn: { borderWidth: 1.5, borderColor: colors.primary, borderRadius: 14, padding: 16, alignItems: 'center' },
-  outlineBtnText: { color: colors.primary, fontSize: 16, fontWeight: '700' },
   backBtn: { marginBottom: 20, padding: 4, alignSelf: 'flex-start' },
   formHeader: { alignItems: 'center', marginBottom: 32 },
   logoSmall: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

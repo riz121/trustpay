@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
+  TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -97,6 +98,10 @@ export default function EditProfileScreen({ navigation }) {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerValue, setDatePickerValue] = useState(
+    user?.date_of_birth ? new Date(user.date_of_birth) : new Date(2000, 0, 1)
+  );
 
   const setField = (key, val) => {
     setForm((p) => ({ ...p, [key]: val }));
@@ -169,7 +174,7 @@ export default function EditProfileScreen({ navigation }) {
         >
           {/* Avatar Preview */}
           <View style={styles.avatarContainer}>
-            <LinearGradient colors={['#6366f1', '#a78bfa']} style={styles.avatarCircle}>
+            <LinearGradient colors={['#059669', '#10b981']} style={styles.avatarCircle}>
               <Text style={styles.avatarInitials}>
                 {form.full_name
                   ? form.full_name.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase()
@@ -215,13 +220,10 @@ export default function EditProfileScreen({ navigation }) {
               error={errors.phone}
             />
 
-            <InputField
+            <DatePickerField
               label="Date of Birth"
-              icon="calendar"
-              placeholder="YYYY-MM-DD"
               value={form.date_of_birth}
-              onChangeText={(v) => setField('date_of_birth', v)}
-              keyboardType="number-pad"
+              onPress={() => setShowDatePicker(true)}
               error={errors.date_of_birth}
             />
 
@@ -362,7 +364,7 @@ export default function EditProfileScreen({ navigation }) {
             activeOpacity={0.8}
             style={{ marginTop: 8 }}
           >
-            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.saveBtn}>
+            <LinearGradient colors={['#059669', '#10b981']} style={styles.saveBtn}>
               {loading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -375,6 +377,74 @@ export default function EditProfileScreen({ navigation }) {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {Platform.OS === 'android' && showDatePicker && (
+        <DateTimePicker
+          value={datePickerValue}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={(event, selected) => {
+            setShowDatePicker(false);
+            if (event.type === 'set' && selected) {
+              setDatePickerValue(selected);
+              setField('date_of_birth', selected.toISOString().split('T')[0]);
+            }
+          }}
+        />
+      )}
+      {Platform.OS === 'ios' && (
+        <Modal visible={showDatePicker} transparent animationType="slide">
+          <View style={styles.dateModalOverlay}>
+            <View style={styles.dateModalSheet}>
+              <View style={styles.dateModalHeader}>
+                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                  <Text style={styles.dateModalCancel}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={styles.dateModalTitle}>Date of Birth</Text>
+                <TouchableOpacity onPress={() => {
+                  setField('date_of_birth', datePickerValue.toISOString().split('T')[0]);
+                  setShowDatePicker(false);
+                }}>
+                  <Text style={styles.dateModalDone}>Done</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={datePickerValue}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()}
+                textColor={colors.text}
+                onChange={(_, selected) => { if (selected) setDatePickerValue(selected); }}
+                style={{ height: 200 }}
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+function DatePickerField({ label, value, onPress, error }) {
+  const display = value
+    ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '';
+  return (
+    <View style={styles.inputGroup}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        style={[styles.inputWrapper, error && styles.inputWrapperError]}
+      >
+        <Feather name="calendar" size={18} color={colors.textMuted} style={styles.inputIcon} />
+        <Text style={[styles.textInput, { lineHeight: 48, color: value ? colors.text : colors.textMuted }]}>
+          {display || 'Select date'}
+        </Text>
+        <Feather name="chevron-down" size={16} color={colors.textMuted} style={{ marginRight: 14 }} />
+      </TouchableOpacity>
+      {error ? <Text style={styles.inputError}>{error}</Text> : null}
     </View>
   );
 }
@@ -444,7 +514,7 @@ const styles = StyleSheet.create({
   },
   toggleBtnSelected: {
     borderColor: colors.primary,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
   },
   toggleBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
   toggleBtnTextSelected: { color: colors.primary, fontWeight: '600' },
@@ -479,4 +549,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  dateModalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  dateModalSheet: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 30 },
+  dateModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
+  dateModalTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
+  dateModalCancel: { color: colors.textMuted, fontSize: 16 },
+  dateModalDone: { color: colors.primary, fontSize: 16, fontWeight: '700' },
 });

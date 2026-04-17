@@ -306,7 +306,7 @@ export default function NewTransactionScreen({ navigation }) {
             disabled={createMutation.isPending}
             style={{ marginTop: 8 }}
           >
-            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.submitBtn}>
+            <LinearGradient colors={['#059669', '#10b981']} style={styles.submitBtn}>
               {createMutation.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: 'rgba(99,102,241,0.15)',
+    backgroundColor: 'rgba(16,185,129,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },

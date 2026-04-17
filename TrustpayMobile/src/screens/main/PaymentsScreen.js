@@ -113,7 +113,7 @@ function TransactionLogTab({ transactions, userEmail, isLoading, refetch, isRefe
             </View>
             <View style={styles.logInfo}>
               <Text style={styles.logTitle} numberOfLines={1}>
-                {tx.title || 'Escrow Transaction'}
+                {tx.title || 'Transaction'}
               </Text>
               <Text style={styles.logCounterparty} numberOfLines={1}>
                 {isSender ? 'To: ' : 'From: '}{counterparty}
@@ -288,7 +288,7 @@ function WithdrawTab({ availableBalance }) {
             activeOpacity={0.8}
             style={{ marginTop: 4 }}
           >
-            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.addBankSubmitBtn}>
+            <LinearGradient colors={['#059669', '#10b981']} style={styles.addBankSubmitBtn}>
               {addBankMutation.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -325,7 +325,7 @@ function WithdrawTab({ availableBalance }) {
                 activeOpacity={0.8}
                 style={[styles.bankAccountCard, isSelected && styles.bankAccountCardSelected]}
               >
-                <View style={[styles.bankIconWrap, isSelected && { backgroundColor: 'rgba(99,102,241,0.2)' }]}>
+                <View style={[styles.bankIconWrap, isSelected && { backgroundColor: 'rgba(16,185,129,0.2)' }]}>
                   <Feather name="credit-card" size={20} color={isSelected ? colors.primary : colors.textMuted} />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 12,
   },
-  bankAccountCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(99,102,241,0.08)' },
+  bankAccountCardSelected: { borderColor: colors.primary, backgroundColor: 'rgba(16,185,129,0.08)' },
   bankIconWrap: {
     width: 42,
     height: 42,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: 'rgba(99,102,241,0.1)',
+    backgroundColor: 'rgba(16,185,129,0.1)',
   },
   maxBtnText: { color: colors.primary, fontSize: 13, fontWeight: '700' },
   withdrawBtn: {

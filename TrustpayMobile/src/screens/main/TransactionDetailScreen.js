@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, TextInput, Modal,
 } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -32,6 +33,8 @@ export default function TransactionDetailScreen({ navigation, route }) {
   const { transactionId, transaction: initialData } = route.params || {};
   const [disputeModalVisible, setDisputeModalVisible] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
+  const [disputeFile, setDisputeFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   const { data: txData, isLoading } = useQuery({
     queryKey: ['transaction', transactionId],
@@ -69,10 +72,26 @@ export default function TransactionDetailScreen({ navigation, route }) {
   });
 
   const disputeMutation = useMutation({
-    mutationFn: () => transactionApi.disputeEscrow(transactionId, disputeReason),
+    mutationFn: async () => {
+      let fileUrl = null;
+      if (disputeFile) {
+        setUploadingFile(true);
+        try {
+          const result = await transactionApi.uploadDisputeFile(
+            disputeFile.uri, disputeFile.name, disputeFile.mimeType
+          );
+          fileUrl = result.url;
+        } finally {
+          setUploadingFile(false);
+        }
+      }
+      return transactionApi.disputeEscrow(transactionId, disputeReason, fileUrl);
+    },
     onSuccess: () => {
       invalidate();
       setDisputeModalVisible(false);
+      setDisputeReason('');
+      setDisputeFile(null);
       Alert.alert('Dispute Filed', 'Your dispute has been submitted for review.');
     },
     onError: (e) => Alert.alert('Error', e.message || 'Failed to file dispute'),
@@ -98,6 +117,26 @@ export default function TransactionDetailScreen({ navigation, route }) {
         { text: 'Yes, Cancel', style: 'destructive', onPress: () => cancelMutation.mutate() },
       ]
     );
+  };
+
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf', 'application/msword',
+               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled && result.assets?.length > 0) {
+        const asset = result.assets[0];
+        if (asset.size > 10 * 1024 * 1024) {
+          Alert.alert('File Too Large', 'Maximum file size is 10 MB.');
+          return;
+        }
+        setDisputeFile({ uri: asset.uri, name: asset.name, mimeType: asset.mimeType, size: asset.size });
+      }
+    } catch {
+      Alert.alert('Error', 'Could not pick file. Please try again.');
+    }
   };
 
   const handleDispute = () => {
@@ -191,7 +230,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
           </View>
 
           <View style={styles.partyRow}>
-            <View style={[styles.partyIcon, { backgroundColor: 'rgba(167,139,250,0.15)' }]}>
+            <View style={[styles.partyIcon, { backgroundColor: 'rgba(52,211,153,0.15)' }]}>
               <Feather name="user" size={18} color={colors.accent} />
             </View>
             <View style={styles.partyInfo}>
@@ -311,14 +350,39 @@ export default function TransactionDetailScreen({ navigation, route }) {
               numberOfLines={5}
               textAlignVertical="top"
             />
+
+            {/* File attachment */}
+            <TouchableOpacity onPress={handlePickFile} activeOpacity={0.8} style={styles.attachBtn}>
+              <Feather name="paperclip" size={16} color={colors.textSecondary} />
+              <Text style={styles.attachBtnText}>
+                {disputeFile ? disputeFile.name : 'Attach Evidence (optional)'}
+              </Text>
+              {disputeFile && (
+                <TouchableOpacity onPress={() => setDisputeFile(null)} style={{ marginLeft: 'auto' }}>
+                  <Feather name="x" size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+            {disputeFile && (
+              <Text style={styles.attachHint}>
+                {(disputeFile.size / 1024).toFixed(0)} KB · tap × to remove
+              </Text>
+            )}
+
             <TouchableOpacity
               onPress={handleDispute}
-              disabled={disputeMutation.isPending}
+              disabled={disputeMutation.isPending || uploadingFile}
               activeOpacity={0.8}
+              style={{ marginTop: 4 }}
             >
               <LinearGradient colors={['#d97706', '#fbbf24']} style={styles.disputeSubmitBtn}>
-                {disputeMutation.isPending ? (
-                  <ActivityIndicator color="#000" />
+                {disputeMutation.isPending || uploadingFile ? (
+                  <>
+                    <ActivityIndicator color="#000" size="small" />
+                    <Text style={styles.disputeSubmitText}>
+                      {uploadingFile ? 'Uploading file…' : 'Submitting…'}
+                    </Text>
+                  </>
                 ) : (
                   <>
                     <Feather name="alert-triangle" size={18} color="#000" />
@@ -368,13 +432,13 @@ const styles = StyleSheet.create({
   section: { marginBottom: 16 },
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 16 },
   partyRow: { flexDirection: 'row', alignItems: 'center' },
-  partyIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(99,102,241,0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  partyIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: 'rgba(16,185,129,0.15)', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   partyInfo: { flex: 1 },
   partyLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
   partyRole: { color: colors.textMuted, fontSize: 12, fontWeight: '500', textTransform: 'uppercase', letterSpacing: 0.5 },
   partyName: { color: colors.text, fontSize: 16, fontWeight: '600' },
   partyEmail: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
-  youBadge: { backgroundColor: 'rgba(99,102,241,0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  youBadge: { backgroundColor: 'rgba(16,185,129,0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
   youText: { color: colors.primary, fontSize: 12, fontWeight: '600' },
   confirmedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(52,211,153,0.1)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   confirmedText: { color: colors.emerald, fontSize: 11, fontWeight: '600' },
@@ -389,7 +453,10 @@ const styles = StyleSheet.create({
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700' },
   modalSubtitle: { color: colors.textMuted, fontSize: 14, marginBottom: 16, lineHeight: 22 },
-  disputeInput: { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, padding: 14, color: colors.text, fontSize: 15, height: 120, marginBottom: 16 },
+  disputeInput: { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, padding: 14, color: colors.text, fontSize: 15, height: 120, marginBottom: 12 },
+  attachBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.inputBorder, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 6 },
+  attachBtnText: { flex: 1, color: colors.textSecondary, fontSize: 14 },
+  attachHint: { color: colors.textMuted, fontSize: 12, marginBottom: 12, marginLeft: 4 },
   disputeSubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, padding: 16 },
   disputeSubmitText: { color: '#000', fontSize: 16, fontWeight: '700' },
 });

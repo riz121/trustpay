@@ -32,7 +32,7 @@ export default function TransactionCard({ transaction, onPress, currentUserEmail
         <Feather name={isSender ? 'arrow-up-right' : 'arrow-down-left'} size={20} color={isSender ? colors.destructive : colors.emerald} />
       </View>
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={1}>{transaction.title || 'Escrow Transaction'}</Text>
+        <Text style={styles.title} numberOfLines={1}>{transaction.title || 'Transaction'}</Text>
         <Text style={styles.counterparty} numberOfLines={1}>{counterparty}</Text>
         <Text style={styles.date}>{formatDate(transaction.created_at)}</Text>
       </View>

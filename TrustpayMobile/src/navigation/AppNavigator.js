@@ -97,7 +97,7 @@ function NewTabButton({ onPress }) {
     >
       <View style={tabStyles.newBtnShadow}>
         <LinearGradient
-          colors={['#6366f1', '#8b5cf6']}
+          colors={['#059669', '#10b981']}
           style={tabStyles.newBtnGradient}
         >
           <Feather name="plus" size={26} color="#fff" />
@@ -121,7 +121,7 @@ function MainTabs() {
           paddingBottom: 16,
           paddingTop: 10,
         },
-        tabBarActiveTintColor: '#6366f1',
+        tabBarActiveTintColor: '#10b981',
         tabBarInactiveTintColor: '#64748b',
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarIcon: ({ color, size }) => {
@@ -157,7 +157,7 @@ export default function AppNavigator() {
   if (isLoadingAuth || isLoadingOnboarding) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
   }
@@ -188,18 +188,20 @@ const tabStyles = StyleSheet.create({
     justifyContent: 'center',
   },
   newBtnShadow: {
-    marginTop: -18,
-    borderRadius: 30,
-    shadowColor: '#6366f1',
+    marginTop: -20,
+    borderRadius: 28,
+    shadowColor: '#10b981',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
+    shadowOpacity: 0.45,
+    shadowRadius: 8,
     elevation: 10,
+    borderWidth: 3,
+    borderColor: '#0a0a0f',
   },
   newBtnGradient: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
   },

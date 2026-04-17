@@ -14,8 +14,8 @@ const SLIDES = [
   {
     id: '1',
     icon: 'shield',
-    iconColor: '#6366f1',
-    bg: 'rgba(99,102,241,0.15)',
+    iconColor: '#10b981',
+    bg: 'rgba(16,185,129,0.15)',
     title: 'Secure Payments',
     description:
       'TrustPay holds funds securely until both parties confirm the transaction. No more payment disputes.',
@@ -23,8 +23,8 @@ const SLIDES = [
   {
     id: '2',
     icon: 'zap',
-    iconColor: '#a78bfa',
-    bg: 'rgba(167,139,250,0.15)',
+    iconColor: '#34d399',
+    bg: 'rgba(52,211,153,0.15)',
     title: 'Instant Transfers',
     description:
       'Release funds instantly once conditions are met. Track every transaction in real time with full transparency.',
@@ -45,9 +45,8 @@ export default function OnboardingScreen() {
   const flatListRef = useRef(null);
   const { setOnboardingDone } = useAuth();
 
-  const markDone = async () => {
-    await setOnboardingDone(); // writes AsyncStorage + updates AuthContext state
-    // AppNavigator will automatically re-render and show SelectPlan or MainTabs
+  const markDone = () => {
+    setOnboardingDone();
   };
 
   const next = () => {
@@ -108,7 +107,7 @@ export default function OnboardingScreen() {
           </View>
 
           <TouchableOpacity onPress={next} activeOpacity={0.8} style={{ width: '100%' }}>
-            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.nextBtn}>
+            <LinearGradient colors={['#059669', '#10b981']} style={styles.nextBtn}>
               <Text style={styles.nextBtnText}>
                 {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
               </Text>

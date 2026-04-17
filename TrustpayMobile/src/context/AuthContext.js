@@ -2,40 +2,23 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi, getToken, setToken, removeToken, setRefreshToken } from '../api/apiClient';
 
-const ONBOARDING_KEY = 'escrow_onboarding_done';
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [onboardingDone, setOnboardingDoneState] = useState(false);
-  const [isLoadingOnboarding, setIsLoadingOnboarding] = useState(true);
+  const isLoadingOnboarding = false;
 
   const isAuthenticated = !!user;
 
-  const loadOnboardingState = useCallback(async () => {
-    setIsLoadingOnboarding(true);
-    try {
-      const val = await AsyncStorage.getItem(ONBOARDING_KEY);
-      setOnboardingDoneState(val === 'true');
-    } catch {
-      setOnboardingDoneState(false);
-    } finally {
-      setIsLoadingOnboarding(false);
-    }
-  }, []);
-
-  const setOnboardingDone = useCallback(async () => {
-    await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+  const setOnboardingDone = useCallback(() => {
     setOnboardingDoneState(true);
   }, []);
 
   const checkAppState = useCallback(async () => {
     setIsLoadingAuth(true);
     try {
-      // Always load onboarding state regardless of auth status
-      await loadOnboardingState();
       const token = await getToken();
       if (!token) {
         setUser(null);
@@ -49,7 +32,7 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoadingAuth(false);
     }
-  }, [loadOnboardingState]);
+  }, []);
 
   useEffect(() => {
     checkAppState();
@@ -90,7 +73,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     await removeToken();
     setUser(null);
-    // Do not reset onboardingDone — onboarding is shown before auth and should persist
+    setOnboardingDoneState(false);
   };
 
   const updateUser = useCallback(async (data) => {
