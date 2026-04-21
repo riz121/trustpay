@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi, getToken, setToken, removeToken, setRefreshToken } from '../api/apiClient';
+import { registerForPushNotifications, savePushTokenToServer } from '../utils/notifications';
 
 const AuthContext = createContext(null);
 
@@ -50,6 +51,8 @@ export function AuthProvider({ children }) {
       const userData = await authApi.getMe();
       setUser(userData);
     }
+    // Register push token after login
+    registerForPushNotifications().then(savePushTokenToServer).catch(() => {});
     return data;
   };
 

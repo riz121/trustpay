@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TrustPay",
+    "name": "Trustdepo",
     "slug": "trustpay-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,9 +17,11 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.trustpay.mobile",
-      "buildNumber": "2",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Camera access is used for scanning payment cards.",
+        "NSPhotoLibraryUsageDescription": "Photo library access is used for attaching documents to disputes.",
+        "NSMicrophoneUsageDescription": "Microphone access is not used by this app."
       }
     },
     "android": {
@@ -34,6 +36,14 @@
     },
     "plugins": [
       [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#10b981",
+          "sounds": []
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -42,7 +52,13 @@
         }
       ],
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.trustpay.mobile"
+        }
+      ]
     ],
     "extra": {
       "eas": {

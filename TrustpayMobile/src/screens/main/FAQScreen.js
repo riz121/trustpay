@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -12,15 +12,15 @@ const FAQS = [
     category: 'General',
     items: [
       {
-        q: 'What is TrustPay?',
-        a: 'TrustPay is a secure payment platform for the UAE that holds funds safely between two parties until both confirm the transaction is complete. It protects buyers and sellers from fraud.',
+        q: 'What is Trustdepo?',
+        a: 'Trustdepo is a secure payment platform for the UAE that holds funds safely between two parties until both confirm the transaction is complete. It protects buyers and sellers from fraud.',
       },
       {
-        q: 'Who can use TrustPay?',
-        a: 'TrustPay is available to UAE residents and businesses. You must have a valid Emirates ID or trade license to use the platform.',
+        q: 'Who can use Trustdepo?',
+        a: 'Trustdepo is available to UAE residents and businesses. You must have a valid Emirates ID or trade license to use the platform.',
       },
       {
-        q: 'Is TrustPay regulated in the UAE?',
+        q: 'Is Trustdepo regulated in the UAE?',
         a: 'We operate in compliance with UAE Central Bank regulations and ADGM/DIFC fintech frameworks for payment service providers.',
       },
     ],
@@ -111,6 +111,7 @@ function AccordionItem({ item, isOpen, onToggle }) {
 }
 
 export default function FAQScreen({ navigation }) {
+  const handleEmail = () => Linking.openURL('mailto:support@trustdepo.com');
   const [openItem, setOpenItem] = useState(null);
   const [search, setSearch] = useState('');
 
@@ -190,8 +191,21 @@ export default function FAQScreen({ navigation }) {
         {/* Contact */}
         <GlassCard style={styles.contactCard}>
           <Text style={styles.contactTitle}>Still need help?</Text>
-          <Text style={styles.contactSubtitle}>Our UAE support team is available 24/7</Text>
-          <Text style={styles.contactEmail}>support@trustdepo.com</Text>
+          <Text style={styles.contactSubtitle}>Our support team is available 24/7</Text>
+          <View style={styles.contactBtns}>
+            <TouchableOpacity style={styles.emailBtn} onPress={handleEmail} activeOpacity={0.8}>
+              <Feather name="mail" size={16} color={colors.textMuted} />
+              <Text style={styles.emailBtnText}>Email Us</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.chatBtn}
+              onPress={() => navigation.navigate('LiveChat')}
+              activeOpacity={0.8}
+            >
+              <Feather name="message-circle" size={16} color="#fff" />
+              <Text style={styles.chatBtnText}>Live Chat</Text>
+            </TouchableOpacity>
+          </View>
         </GlassCard>
       </ScrollView>
     </View>
@@ -254,6 +268,30 @@ const styles = StyleSheet.create({
   emptyText: { color: colors.textMuted, fontSize: 15 },
   contactCard: { marginTop: 4, padding: 20, alignItems: 'center' },
   contactTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 6 },
-  contactSubtitle: { color: colors.textMuted, fontSize: 13, marginBottom: 10, textAlign: 'center' },
-  contactEmail: { color: colors.primary, fontSize: 13, fontWeight: '600' },
+  contactSubtitle: { color: colors.textMuted, fontSize: 13, marginBottom: 16, textAlign: 'center' },
+  contactBtns: { flexDirection: 'row', gap: 10, width: '100%' },
+  emailBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  emailBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  chatBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+  },
+  chatBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },
 });

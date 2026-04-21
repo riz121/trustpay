@@ -8,8 +8,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useStripe } from '@stripe/stripe-react-native';
 import { useAuth } from '../../context/AuthContext';
-import { transactionApi } from '../../api/apiClient';
+import { transactionApi, disputeApi, paymentApi } from '../../api/apiClient';
 import StatusBadge from '../../components/StatusBadge';
 import GlassCard from '../../components/GlassCard';
 import { colors } from '../../theme/colors';
@@ -31,10 +32,21 @@ export default function TransactionDetailScreen({ navigation, route }) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { transactionId, transaction: initialData } = route.params || {};
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [disputeModalVisible, setDisputeModalVisible] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
   const [disputeFile, setDisputeFile] = useState(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+
+  const { data: myDisputes = [] } = useQuery({
+    queryKey: ['my-disputes'],
+    queryFn: disputeApi.getMyDisputes,
+    enabled: !!transactionId,
+  });
+
+  // Find the dispute linked to this transaction (if any)
+  const myDispute = myDisputes.find(d => d.transaction_id === String(transactionId));
 
   const { data: txData, isLoading } = useQuery({
     queryKey: ['transaction', transactionId],
@@ -71,39 +83,45 @@ export default function TransactionDetailScreen({ navigation, route }) {
     onError: (e) => Alert.alert('Error', e.message || 'Failed to cancel transaction'),
   });
 
-  const disputeMutation = useMutation({
-    mutationFn: async () => {
-      let fileUrl = null;
-      if (disputeFile) {
-        setUploadingFile(true);
-        try {
-          const result = await transactionApi.uploadDisputeFile(
-            disputeFile.uri, disputeFile.name, disputeFile.mimeType
-          );
-          fileUrl = result.url;
-        } finally {
-          setUploadingFile(false);
-        }
+
+  const handlePayNow = async () => {
+    if (!transaction) return;
+    setPaymentProcessing(true);
+    try {
+      const { clientSecret, paymentIntentId } = await paymentApi.createPaymentIntent(
+        transaction.amount,
+        transactionId
+      );
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: 'TrustDepo',
+        style: 'alwaysDark',
+      });
+      if (initError) { Alert.alert('Payment Error', initError.message); return; }
+
+      const { error: paymentError } = await presentPaymentSheet();
+      if (paymentError) {
+        if (paymentError.code !== 'Canceled') Alert.alert('Payment Failed', paymentError.message);
+        return;
       }
-      return transactionApi.disputeEscrow(transactionId, disputeReason, fileUrl);
-    },
-    onSuccess: () => {
+
+      await paymentApi.fundTransaction(transactionId, paymentIntentId);
       invalidate();
-      setDisputeModalVisible(false);
-      setDisputeReason('');
-      setDisputeFile(null);
-      Alert.alert('Dispute Filed', 'Your dispute has been submitted for review.');
-    },
-    onError: (e) => Alert.alert('Error', e.message || 'Failed to file dispute'),
-  });
+      Alert.alert('Funds Held!', 'Payment authorised. Funds are held in escrow until you release.');
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Payment processing failed');
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
 
   const handleConfirm = () => {
     Alert.alert(
-      'Confirm Transaction',
-      'Are you sure you want to confirm and release funds?',
+      'Confirm & Release',
+      'This will release funds to the receiver. Are you sure?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Confirm', onPress: () => confirmMutation.mutate() },
+        { text: 'Confirm & Release', onPress: () => confirmMutation.mutate() },
       ]
     );
   };
@@ -122,8 +140,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
   const handlePickFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['image/*', 'application/pdf', 'application/msword',
-               'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        type: ['application/pdf'],
         copyToCacheDirectory: true,
       });
       if (!result.canceled && result.assets?.length > 0) {
@@ -139,12 +156,37 @@ export default function TransactionDetailScreen({ navigation, route }) {
     }
   };
 
-  const handleDispute = () => {
-    if (!disputeReason.trim()) {
-      Alert.alert('Reason Required', 'Please provide a reason for the dispute.');
+  const handleDispute = async () => {
+    if (disputeReason.trim().length < 10) {
+      Alert.alert('Reason Too Short', 'Please describe the issue in at least 10 characters.');
       return;
     }
-    disputeMutation.mutate();
+
+    setIsSubmittingDispute(true);
+    try {
+      let fileUrl = null;
+      if (disputeFile) {
+        const uploadResult = await transactionApi.uploadDisputeFile(
+          disputeFile.uri, disputeFile.name, disputeFile.mimeType
+        );
+        fileUrl = uploadResult?.url || null;
+      }
+
+      await transactionApi.disputeEscrow(transactionId, disputeReason, fileUrl);
+
+      invalidate();
+      setDisputeReason('');
+      setDisputeFile(null);
+      setIsSubmittingDispute(false);
+      Alert.alert(
+        'Dispute Filed',
+        'Your dispute has been submitted for review. Our team will respond within 24 hours.',
+        [{ text: 'OK', onPress: () => setDisputeModalVisible(false) }]
+      );
+    } catch (e) {
+      setIsSubmittingDispute(false);
+      Alert.alert('Error', e.message || 'Failed to submit dispute. Please try again.');
+    }
   };
 
   if (isLoading && !transaction) {
@@ -171,9 +213,10 @@ export default function TransactionDetailScreen({ navigation, route }) {
   const isActive = ['pending_deposit', 'funded', 'sender_confirmed', 'receiver_confirmed'].includes(transaction.status);
   const isSenderConfirmed = transaction.status === 'sender_confirmed' || transaction.status === 'receiver_confirmed' || transaction.status === 'released';
   const isReceiverConfirmed = transaction.status === 'receiver_confirmed' || transaction.status === 'released';
-  const canConfirm = isActive && ((isSender && !isSenderConfirmed) || (isReceiver && !isReceiverConfirmed));
+  const canPayNow = transaction.status === 'pending_deposit' && isSender;
+  const canConfirm = isActive && transaction.status !== 'pending_deposit' && ((isSender && !isSenderConfirmed) || (isReceiver && !isReceiverConfirmed));
   const canCancel = isActive && !['disputed', 'released', 'cancelled'].includes(transaction.status);
-  const canDispute = isActive && !['disputed', 'released', 'cancelled'].includes(transaction.status);
+  const canDispute = isActive && !['disputed', 'released', 'cancelled'].includes(transaction.status) && transaction.status !== 'pending_deposit';
 
   return (
     <View style={styles.container}>
@@ -265,10 +308,65 @@ export default function TransactionDetailScreen({ navigation, route }) {
           )}
         </GlassCard>
 
+        {/* Dispute Status Card — shown when transaction is disputed */}
+        {myDispute && (
+          <GlassCard style={styles.section}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Feather name="alert-triangle" size={16} color={colors.yellow} />
+              <Text style={styles.sectionTitle}>Dispute Status</Text>
+            </View>
+            <DetailRow label="Ticket Number" value={myDispute.ticket_number || '—'} />
+            <DetailRow label="Filed On" value={formatDate(myDispute.created_date)} />
+            <DetailRow label="Reason" value={myDispute.reason || '—'} multiline />
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <Text style={{ color: colors.textMuted, fontSize: 13, marginBottom: 4 }}>Status</Text>
+              <View style={[styles.disputeStatusBadge, disputeStatusStyle(myDispute.status).badge]}>
+                <Text style={[styles.disputeStatusText, disputeStatusStyle(myDispute.status).text]}>
+                  {disputeStatusLabel(myDispute.status)}
+                </Text>
+              </View>
+            </View>
+            {myDispute.resolution_notes ? (
+              <DetailRow label="Resolution" value={myDispute.resolution_notes} multiline />
+            ) : null}
+          </GlassCard>
+        )}
+
+        {/* Fee breakdown — shown after release */}
+        {transaction.status === 'released' && transaction.platform_fee > 0 && (
+          <GlassCard style={styles.section}>
+            <Text style={styles.sectionTitle}>Fee Breakdown</Text>
+            <DetailRow label="Transaction Amount" value={`AED ${formatAmount(transaction.amount)}`} />
+            <DetailRow label="Platform Fee (2%)" value={`− AED ${formatAmount(transaction.platform_fee)}`} />
+            <View style={styles.feeDivider} />
+            <DetailRow label="Seller Receives" value={`AED ${formatAmount(transaction.seller_amount)}`} />
+          </GlassCard>
+        )}
+
         {/* Actions */}
-        {(canConfirm || canCancel || canDispute) && (
+        {(canPayNow || canConfirm || canCancel || canDispute) && (
           <GlassCard style={styles.section}>
             <Text style={styles.sectionTitle}>Actions</Text>
+
+            {canPayNow && (
+              <TouchableOpacity
+                onPress={handlePayNow}
+                activeOpacity={0.8}
+                disabled={paymentProcessing}
+                style={{ marginBottom: 10 }}
+              >
+                <LinearGradient colors={['#4f46e5', '#7c3aed']} style={styles.actionBtn}>
+                  {paymentProcessing ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <>
+                      <Feather name="credit-card" size={18} color="#fff" />
+                      <Text style={styles.actionBtnText}>Pay Now — AED {formatAmount(transaction.amount)}</Text>
+                    </>
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
 
             {canConfirm && (
               <TouchableOpacity
@@ -327,13 +425,16 @@ export default function TransactionDetailScreen({ navigation, route }) {
         visible={disputeModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setDisputeModalVisible(false)}
+        onRequestClose={() => !isSubmittingDispute && setDisputeModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>File a Dispute</Text>
-              <TouchableOpacity onPress={() => setDisputeModalVisible(false)}>
+              <TouchableOpacity
+                onPress={() => !isSubmittingDispute && setDisputeModalVisible(false)}
+                disabled={isSubmittingDispute}
+              >
                 <Feather name="x" size={22} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -342,7 +443,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
             </Text>
             <TextInput
               style={styles.disputeInput}
-              placeholder="Describe the issue..."
+              placeholder="Describe the issue (min. 10 characters)..."
               placeholderTextColor={colors.textMuted}
               value={disputeReason}
               onChangeText={setDisputeReason}
@@ -355,7 +456,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
             <TouchableOpacity onPress={handlePickFile} activeOpacity={0.8} style={styles.attachBtn}>
               <Feather name="paperclip" size={16} color={colors.textSecondary} />
               <Text style={styles.attachBtnText}>
-                {disputeFile ? disputeFile.name : 'Attach Evidence (optional)'}
+                {disputeFile ? disputeFile.name : 'Attach PDF (optional)'}
               </Text>
               {disputeFile && (
                 <TouchableOpacity onPress={() => setDisputeFile(null)} style={{ marginLeft: 'auto' }}>
@@ -371,17 +472,15 @@ export default function TransactionDetailScreen({ navigation, route }) {
 
             <TouchableOpacity
               onPress={handleDispute}
-              disabled={disputeMutation.isPending || uploadingFile}
+              disabled={isSubmittingDispute}
               activeOpacity={0.8}
               style={{ marginTop: 4 }}
             >
               <LinearGradient colors={['#d97706', '#fbbf24']} style={styles.disputeSubmitBtn}>
-                {disputeMutation.isPending || uploadingFile ? (
+                {isSubmittingDispute ? (
                   <>
                     <ActivityIndicator color="#000" size="small" />
-                    <Text style={styles.disputeSubmitText}>
-                      {uploadingFile ? 'Uploading file…' : 'Submitting…'}
-                    </Text>
+                    <Text style={styles.disputeSubmitText}>Submitting…</Text>
                   </>
                 ) : (
                   <>
@@ -396,6 +495,33 @@ export default function TransactionDetailScreen({ navigation, route }) {
       </Modal>
     </View>
   );
+}
+
+function disputeStatusLabel(status) {
+  switch (status) {
+    case 'open':             return 'Open — Awaiting Review';
+    case 'under_review':     return 'Under Review';
+    case 'resolved_release': return 'Resolved — Funds Released';
+    case 'resolved_refund':  return 'Resolved — Refund Issued';
+    case 'rejected':         return 'Rejected';
+    default:                 return status || 'Unknown';
+  }
+}
+
+function disputeStatusStyle(status) {
+  switch (status) {
+    case 'open':
+      return { badge: { backgroundColor: 'rgba(251,191,36,0.15)' }, text: { color: '#fbbf24' } };
+    case 'under_review':
+      return { badge: { backgroundColor: 'rgba(59,130,246,0.15)' }, text: { color: '#60a5fa' } };
+    case 'resolved_release':
+    case 'resolved_refund':
+      return { badge: { backgroundColor: 'rgba(16,185,129,0.15)' }, text: { color: '#10b981' } };
+    case 'rejected':
+      return { badge: { backgroundColor: 'rgba(239,68,68,0.15)' }, text: { color: '#ef4444' } };
+    default:
+      return { badge: { backgroundColor: 'rgba(100,116,139,0.15)' }, text: { color: '#94a3b8' } };
+  }
 }
 
 function DetailRow({ label, value, multiline }) {
@@ -448,8 +574,8 @@ const styles = StyleSheet.create({
   actionBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   actionBtnOutline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, padding: 14, borderWidth: 1.5 },
   actionBtnOutlineText: { fontSize: 16, fontWeight: '600' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, borderTopWidth: 1, borderColor: colors.border },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-start', padding: 0 },
+  modalContent: { backgroundColor: '#1a1a2e', borderBottomLeftRadius: 24, borderBottomRightRadius: 24, padding: 24, paddingTop: 56, borderBottomWidth: 1, borderColor: colors.border },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   modalTitle: { color: colors.text, fontSize: 20, fontWeight: '700' },
   modalSubtitle: { color: colors.textMuted, fontSize: 14, marginBottom: 16, lineHeight: 22 },
@@ -459,4 +585,7 @@ const styles = StyleSheet.create({
   attachHint: { color: colors.textMuted, fontSize: 12, marginBottom: 12, marginLeft: 4 },
   disputeSubmitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, padding: 16 },
   disputeSubmitText: { color: '#000', fontSize: 16, fontWeight: '700' },
+  disputeStatusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  disputeStatusText: { fontSize: 12, fontWeight: '700' },
+  feeDivider: { height: 1, backgroundColor: colors.border, marginVertical: 10 },
 });

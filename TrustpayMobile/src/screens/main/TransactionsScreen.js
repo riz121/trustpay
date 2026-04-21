@@ -51,6 +51,11 @@ export default function TransactionsScreen({ navigation }) {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.headerSafe}>
         <View style={styles.header}>
+          {navigation.canGoBack() ? (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Feather name="arrow-left" size={22} color={colors.text} />
+            </TouchableOpacity>
+          ) : <View style={{ width: 36 }} />}
           <Text style={styles.headerTitle}>Transactions</Text>
           <TouchableOpacity
             onPress={() => navigation.navigate('NewTransaction')}
@@ -144,7 +149,8 @@ export default function TransactionsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   headerSafe: { backgroundColor: '#0f0f1a', borderBottomWidth: 1, borderBottomColor: colors.border },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
   addBtn: { padding: 4 },
   searchWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.inputBg, borderRadius: 12, marginHorizontal: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.inputBorder },

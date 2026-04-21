@@ -18,7 +18,7 @@ const SLIDES = [
     bg: 'rgba(16,185,129,0.15)',
     title: 'Secure Payments',
     description:
-      'TrustPay holds funds securely until both parties confirm the transaction. No more payment disputes.',
+      'Trustdepo holds funds securely until both parties confirm the transaction. No more payment disputes.',
   },
   {
     id: '2',
@@ -36,7 +36,7 @@ const SLIDES = [
     bg: 'rgba(52,211,153,0.15)',
     title: 'Trusted by Businesses',
     description:
-      'Join thousands of businesses and freelancers using TrustPay for secure, dispute-free payments across the UAE.',
+      'Join thousands of businesses and freelancers using Trustdepo for secure, dispute-free payments across the world.',
   },
 ];
 

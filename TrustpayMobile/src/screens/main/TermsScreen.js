@@ -8,15 +8,15 @@ import { colors } from '../../theme/colors';
 const SECTIONS = [
   {
     title: '1. Acceptance of Terms',
-    body: 'By accessing or using TrustPay, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our platform. These terms apply to all users, including senders and receivers of transactions.',
+    body: 'By accessing or using Trustdepo, you agree to be bound by these Terms and Conditions. If you do not agree to these terms, please do not use our platform. These terms apply to all users, including senders and receivers of transactions.',
   },
   {
     title: '2. Eligibility',
-    body: 'You must be at least 18 years of age and a resident of the United Arab Emirates to use TrustPay. By registering, you confirm that you have the legal capacity to enter into binding agreements under UAE law.',
+    body: 'You must be at least 18 years of age and a resident of the United Arab Emirates to use Trustdepo. By registering, you confirm that you have the legal capacity to enter into binding agreements under UAE law.',
   },
   {
     title: '3. Payment Services',
-    body: 'TrustPay acts as a neutral third party to hold funds between two parties during a transaction. Funds are released only when both the sender and receiver confirm that the agreed conditions have been met. TrustPay does not take sides in disputes and acts solely as a neutral custodian.',
+    body: 'Trustdepo acts as a neutral third party to hold funds between two parties during a transaction. Funds are released only when both the sender and receiver confirm that the agreed conditions have been met. Trustdepo does not take sides in disputes and acts solely as a neutral custodian.',
   },
   {
     title: '4. Fees',
@@ -28,7 +28,7 @@ const SECTIONS = [
   },
   {
     title: '6. Disputes',
-    body: "In the event of a dispute, both parties must submit supporting evidence through the app within 7 business days. Our mediation team will review the case and issue a decision within 3 business days. The decision of TrustPay's mediation team is final and binding.",
+    body: "In the event of a dispute, both parties must submit supporting evidence through the app within 7 business days. Our mediation team will review the case and issue a decision within 3 business days. The decision of Trustdepo's mediation team is final and binding.",
   },
   {
     title: '7. Cancellations & Refunds',
@@ -36,11 +36,11 @@ const SECTIONS = [
   },
   {
     title: '8. Prohibited Activities',
-    body: 'You may not use TrustPay for illegal transactions, money laundering, terrorist financing, or any activity prohibited under UAE law. TrustPay reserves the right to freeze funds and report suspicious activity to the UAE Financial Intelligence Unit (FIU).',
+    body: 'You may not use Trustdepo for illegal transactions, money laundering, terrorist financing, or any activity prohibited under UAE law. Trustdepo reserves the right to freeze funds and report suspicious activity to the UAE Financial Intelligence Unit (FIU).',
   },
   {
     title: '9. Limitation of Liability',
-    body: "TrustPay's liability is limited to the value of funds held for your transaction. We are not liable for any indirect, incidental, or consequential damages arising from the use of our platform.",
+    body: "Trustdepo's liability is limited to the value of funds held for your transaction. We are not liable for any indirect, incidental, or consequential damages arising from the use of our platform.",
   },
   {
     title: '10. Governing Law',
@@ -48,7 +48,7 @@ const SECTIONS = [
   },
   {
     title: '11. Changes to Terms',
-    body: 'TrustPay reserves the right to modify these Terms at any time. Users will be notified of material changes via email or in-app notification. Continued use of the platform after changes constitutes acceptance of the updated Terms.',
+    body: 'Trustdepo reserves the right to modify these Terms at any time. Users will be notified of material changes via email or in-app notification. Continued use of the platform after changes constitutes acceptance of the updated Terms.',
   },
 ];
 

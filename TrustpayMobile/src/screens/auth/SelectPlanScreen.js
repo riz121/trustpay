@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Modal,
+  TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Modal, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,9 @@ import { Feather } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
+import { COUNTRIES } from '../../data/countries';
+
+const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === 'AE');
 
 const PLANS = [
   {
@@ -48,15 +51,39 @@ export default function SelectPlanScreen({ navigation }) {
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('standard');
   const [profile, setProfile] = useState({
-    phone: '', city: '', company: '', emirates_id: '',
+    phone: '', city: '', company: '', emirates_id: '', passport_number: '',
     date_of_birth: '', address: '', gender: '', accountType: 'individual',
-    country: '', howDidYouHear: '', howDidYouHearOther: '', vatNumber: '',
+    howDidYouHear: '', howDidYouHearOther: '', vatNumber: '',
   });
+  const [selectedCountry, setSelectedCountry] = useState(DEFAULT_COUNTRY);
+  const [phoneCountry, setPhoneCountry] = useState(DEFAULT_COUNTRY);
+  const isUAE = selectedCountry?.code === 'AE';
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerValue, setDatePickerValue] = useState(new Date(2000, 0, 1));
   const [payment, setPayment] = useState({ cardNumber: '', expiry: '', cvv: '', name: '' });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const [showPhoneCodeModal, setShowPhoneCodeModal] = useState(false);
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [phoneSearch, setPhoneSearch] = useState('');
+  const [countrySearch, setCountrySearch] = useState('');
+
+  const filteredPhoneCountries = useMemo(() => {
+    const q = phoneSearch.toLowerCase();
+    if (!q) return COUNTRIES;
+    return COUNTRIES.filter(
+      (c) => c.name.toLowerCase().includes(q) || c.phoneCode.includes(q)
+    );
+  }, [phoneSearch]);
+
+  const filteredCountries = useMemo(() => {
+    const q = countrySearch.toLowerCase();
+    if (!q) return COUNTRIES;
+    return COUNTRIES.filter((c) => c.name.toLowerCase().includes(q));
+  }, [countrySearch]);
 
   const setProfileField = (key, val) => {
     setProfile((p) => ({ ...p, [key]: val }));
@@ -74,7 +101,9 @@ export default function SelectPlanScreen({ navigation }) {
     if (!profile.date_of_birth.trim()) e.date_of_birth = 'Date of birth is required';
     if (!profile.address.trim()) e.address = 'Address is required';
     if (!profile.gender) e.gender = 'Please select your gender';
-    if (!profile.country.trim()) e.country = 'Country is required';
+    if (!selectedCountry) e.country = 'Country is required';
+    if (isUAE && !profile.emirates_id.trim()) e.emirates_id = 'Emirates ID is required';
+    if (!isUAE && !profile.passport_number.trim()) e.passport_number = 'Passport number is required';
     if (!profile.howDidYouHear) e.howDidYouHear = 'Please tell us how you heard about us';
     if (profile.howDidYouHear === 'Other' && !profile.howDidYouHearOther.trim()) {
       e.howDidYouHearOther = 'Please specify how you heard about us';
@@ -99,16 +128,26 @@ export default function SelectPlanScreen({ navigation }) {
     } else if (step === 2) {
       const e = validateProfile();
       if (Object.keys(e).length) { setErrors(e); return; }
+      setStep(3);
+    } else if (step === 3) {
+      if (!termsAccepted) {
+        Alert.alert('Agreement Required', 'Please accept the Terms & Conditions to continue.');
+        return;
+      }
       if (selectedPlan === 'free') {
         finishSetup();
       } else {
-        setStep(3);
+        setStep(4);
       }
-    } else if (step === 3) {
+    } else if (step === 4) {
       const e = validatePayment();
       if (Object.keys(e).length) { setErrors(e); return; }
       finishSetup();
     }
+  };
+
+  const goBack = () => {
+    if (step > 1) setStep(step - 1);
   };
 
   const finishSetup = async () => {
@@ -119,21 +158,21 @@ export default function SelectPlanScreen({ navigation }) {
         : profile.howDidYouHear;
       await updateUser({
         full_name: user?.full_name,
-        phone: profile.phone.trim(),
+        phone: `${phoneCountry.phoneCode}${profile.phone.trim()}`,
         city: profile.city.trim(),
         company: profile.company.trim() || undefined,
-        emirates_id: profile.emirates_id.trim() || undefined,
+        emirates_id: isUAE ? profile.emirates_id.trim() : undefined,
+        passport_number: !isUAE ? profile.passport_number.trim() : undefined,
         date_of_birth: profile.date_of_birth.trim(),
         address: profile.address.trim(),
         gender: profile.gender,
         account_type: profile.accountType,
-        country: profile.country.trim(),
+        country: selectedCountry?.name || '',
         how_did_you_hear: howHear || undefined,
         vat_number: profile.vatNumber.trim() || undefined,
         plan: selectedPlan,
         plan_selected_at: new Date().toISOString(),
       });
-      // Navigation handled by AppNavigator
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to save profile. Please try again.');
     } finally {
@@ -157,9 +196,17 @@ export default function SelectPlanScreen({ navigation }) {
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+
+            {/* Back button header */}
+            {step > 1 && (
+              <TouchableOpacity onPress={goBack} style={styles.backBtn} activeOpacity={0.7}>
+                <Feather name="arrow-left" size={20} color={colors.text} />
+              </TouchableOpacity>
+            )}
+
             {/* Progress Steps */}
             <View style={styles.stepsRow}>
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3, 4].map((s) => (
                 <React.Fragment key={s}>
                   <View style={[styles.stepCircle, s <= step ? styles.stepActive : styles.stepInactive]}>
                     {s < step ? (
@@ -168,12 +215,12 @@ export default function SelectPlanScreen({ navigation }) {
                       <Text style={[styles.stepNum, s === step ? styles.stepNumActive : styles.stepNumInactive]}>{s}</Text>
                     )}
                   </View>
-                  {s < 3 && <View style={[styles.stepLine, s < step ? styles.stepLineActive : styles.stepLineInactive]} />}
+                  {s < 4 && <View style={[styles.stepLine, s < step ? styles.stepLineActive : styles.stepLineInactive]} />}
                 </React.Fragment>
               ))}
             </View>
             <Text style={styles.stepLabel}>
-              {step === 1 ? 'Choose Your Plan' : step === 2 ? 'Complete Your Profile' : 'Payment Details'}
+              {step === 1 ? 'Choose Your Plan' : step === 2 ? 'Complete Your Profile' : step === 3 ? 'Terms & Conditions' : 'Payment Details'}
             </Text>
 
             {/* Step 1: Plan Selection */}
@@ -225,15 +272,33 @@ export default function SelectPlanScreen({ navigation }) {
               <View style={styles.stepContent}>
                 <Text style={styles.sectionTitle}>Tell us about yourself</Text>
                 <View style={styles.formCard}>
-                  <InputField
-                    label="Phone Number *"
-                    icon="phone"
-                    placeholder="+971 50 123 4567"
-                    value={profile.phone}
-                    onChangeText={(v) => setProfileField('phone', v)}
-                    keyboardType="phone-pad"
-                    error={errors.phone}
-                  />
+
+                  {/* Phone Number with country code */}
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={inputStyles.label}>Phone Number *</Text>
+                    <View style={[inputStyles.wrapper, errors.phone && inputStyles.wrapperError]}>
+                      <TouchableOpacity
+                        onPress={() => { setPhoneSearch(''); setShowPhoneCodeModal(true); }}
+                        activeOpacity={0.7}
+                        style={styles.phoneCodeBtn}
+                      >
+                        <Text style={styles.phoneCodeFlag}>{phoneCountry.flag}</Text>
+                        <Text style={styles.phoneCodeText}>{phoneCountry.phoneCode}</Text>
+                        <Feather name="chevron-down" size={13} color={colors.textMuted} />
+                      </TouchableOpacity>
+                      <View style={styles.phoneCodeDivider} />
+                      <TextInput
+                        style={inputStyles.input}
+                        placeholder="50 123 4567"
+                        placeholderTextColor={colors.textMuted}
+                        value={profile.phone}
+                        onChangeText={(v) => setProfileField('phone', v)}
+                        keyboardType="phone-pad"
+                      />
+                    </View>
+                    {errors.phone ? <Text style={inputStyles.errorText}>{errors.phone}</Text> : null}
+                  </View>
+
                   <InputField
                     label="City *"
                     icon="map-pin"
@@ -242,15 +307,29 @@ export default function SelectPlanScreen({ navigation }) {
                     onChangeText={(v) => setProfileField('city', v)}
                     error={errors.city}
                   />
-                  <InputField
-                    label="Country *"
-                    icon="globe"
-                    placeholder="e.g. United Arab Emirates"
-                    value={profile.country}
-                    onChangeText={(v) => setProfileField('country', v)}
-                    autoCapitalize="words"
-                    error={errors.country}
-                  />
+
+                  {/* Country picker */}
+                  <View style={{ marginBottom: 14 }}>
+                    <Text style={inputStyles.label}>Country *</Text>
+                    <TouchableOpacity
+                      onPress={() => { setCountrySearch(''); setShowCountryModal(true); }}
+                      activeOpacity={0.7}
+                      style={[inputStyles.wrapper, errors.country && inputStyles.wrapperError]}
+                    >
+                      <Feather name="globe" size={18} color={colors.textMuted} style={inputStyles.icon} />
+                      {selectedCountry ? (
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ fontSize: 18 }}>{selectedCountry.flag}</Text>
+                          <Text style={[inputStyles.input, { paddingLeft: 0, flex: 1 }]}>{selectedCountry.name}</Text>
+                        </View>
+                      ) : (
+                        <Text style={[inputStyles.input, { paddingLeft: 0, color: colors.textMuted }]}>Select country</Text>
+                      )}
+                      <Feather name="chevron-down" size={16} color={colors.textMuted} style={{ marginRight: 14 }} />
+                    </TouchableOpacity>
+                    {errors.country ? <Text style={inputStyles.errorText}>{errors.country}</Text> : null}
+                  </View>
+
                   <DatePickerField
                     label="Date of Birth *"
                     value={profile.date_of_birth}
@@ -376,20 +455,74 @@ export default function SelectPlanScreen({ navigation }) {
                     value={profile.vatNumber}
                     onChangeText={(v) => setProfileField('vatNumber', v)}
                   />
-                  <InputField
-                    label="Emirates ID (Optional)"
-                    icon="credit-card"
-                    placeholder="784-XXXX-XXXXXXX-X"
-                    value={profile.emirates_id}
-                    onChangeText={(v) => setProfileField('emirates_id', v)}
-                    keyboardType="number-pad"
-                  />
+                  {isUAE ? (
+                    <InputField
+                      label="Emirates ID *"
+                      icon="credit-card"
+                      placeholder="784-XXXX-XXXXXXX-X"
+                      value={profile.emirates_id}
+                      onChangeText={(v) => setProfileField('emirates_id', v)}
+                      keyboardType="number-pad"
+                      error={errors.emirates_id}
+                    />
+                  ) : (
+                    <InputField
+                      label="Passport Number *"
+                      icon="book-open"
+                      placeholder="e.g. AB1234567"
+                      value={profile.passport_number}
+                      onChangeText={(v) => setProfileField('passport_number', v)}
+                      autoCapitalize="characters"
+                      error={errors.passport_number}
+                    />
+                  )}
                 </View>
               </View>
             )}
 
-            {/* Step 3: Payment */}
+            {/* Step 3: Terms & Conditions */}
             {step === 3 && (
+              <View style={styles.stepContent}>
+                <Text style={styles.sectionTitle}>Terms & Conditions</Text>
+                <ScrollView
+                  style={styles.termsBox}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
+                  {[
+                    { title: '1. Escrow Service', body: 'Trustdepo holds funds in segregated accounts at a licensed UAE bank until both parties confirm the transaction or a dispute is resolved.' },
+                    { title: '2. User Obligations', body: 'You must provide accurate information, use the platform lawfully, and not engage in fraud, money laundering, or any activity that violates UAE law.' },
+                    { title: '3. Fees', body: 'Transaction fees apply based on your selected plan. Fees are non-refundable once a transaction is initiated.' },
+                    { title: '4. Disputes', body: 'Disputes must be filed within 30 days of transaction creation. Trustdepo will review evidence from both parties and issue a binding decision within 5 business days.' },
+                    { title: '5. Data & Privacy', body: 'Your personal data is processed in accordance with the UAE Personal Data Protection Law (PDPL). We do not sell your data to third parties.' },
+                    { title: '6. Limitation of Liability', body: 'Trustdepo is not liable for losses arising from circumstances beyond our control. Our maximum liability is limited to the transaction amount held in escrow.' },
+                    { title: '7. Governing Law', body: 'These terms are governed by the laws of the United Arab Emirates. Any disputes shall be subject to the exclusive jurisdiction of UAE courts.' },
+                  ].map((s) => (
+                    <View key={s.title} style={styles.termItem}>
+                      <Text style={styles.termTitle}>{s.title}</Text>
+                      <Text style={styles.termBody}>{s.body}</Text>
+                    </View>
+                  ))}
+                </ScrollView>
+
+                {/* Checkbox */}
+                <TouchableOpacity
+                  onPress={() => setTermsAccepted(!termsAccepted)}
+                  activeOpacity={0.8}
+                  style={[styles.checkboxRow, termsAccepted && styles.checkboxRowActive]}
+                >
+                  <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                    {termsAccepted && <Feather name="check" size={14} color="#fff" />}
+                  </View>
+                  <Text style={[styles.checkboxLabel, termsAccepted && { color: colors.primary }]}>
+                    I have read and agree to the Terms & Conditions and Privacy Policy
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Step 4: Payment */}
+            {step === 4 && (
               <View style={styles.stepContent}>
                 <Text style={styles.sectionTitle}>
                   {selectedPlan === 'free' ? 'No payment required' : 'Enter payment details'}
@@ -464,7 +597,7 @@ export default function SelectPlanScreen({ navigation }) {
                 ) : (
                   <>
                     <Text style={styles.nextBtnText}>
-                      {step === 3 || (step === 2 && selectedPlan === 'free') ? 'Get Started' : 'Continue'}
+                      {step === 4 || (step === 3 && selectedPlan === 'free') ? 'Get Started' : step === 3 ? 'Accept & Continue' : 'Continue'}
                     </Text>
                     <Feather name="arrow-right" size={20} color="#fff" />
                   </>
@@ -474,7 +607,7 @@ export default function SelectPlanScreen({ navigation }) {
           </ScrollView>
         </KeyboardAvoidingView>
 
-        {/* Date Picker — iOS modal, Android dialog */}
+        {/* Date Picker */}
         {Platform.OS === 'android' && showDatePicker && (
           <DateTimePicker
             value={datePickerValue}
@@ -521,6 +654,100 @@ export default function SelectPlanScreen({ navigation }) {
             </View>
           </Modal>
         )}
+
+        {/* Phone Country Code Modal */}
+        <Modal visible={showPhoneCodeModal} transparent animationType="slide" onRequestClose={() => setShowPhoneCodeModal(false)}>
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>Select Country Code</Text>
+                <TouchableOpacity onPress={() => setShowPhoneCodeModal(false)}>
+                  <Feather name="x" size={22} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.pickerSearch}>
+                <Feather name="search" size={16} color={colors.textMuted} />
+                <TextInput
+                  style={styles.pickerSearchInput}
+                  placeholder="Search country or code..."
+                  placeholderTextColor={colors.textMuted}
+                  value={phoneSearch}
+                  onChangeText={setPhoneSearch}
+                  autoFocus
+                />
+              </View>
+              <FlatList
+                data={filteredPhoneCountries}
+                keyExtractor={(item) => item.code}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.pickerItem, phoneCountry.code === item.code && styles.pickerItemActive]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setPhoneCountry(item);
+                      setShowPhoneCodeModal(false);
+                    }}
+                  >
+                    <Text style={styles.pickerItemFlag}>{item.flag}</Text>
+                    <Text style={styles.pickerItemName}>{item.name}</Text>
+                    <Text style={styles.pickerItemCode}>{item.phoneCode}</Text>
+                    {phoneCountry.code === item.code && (
+                      <Feather name="check" size={16} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
+
+        {/* Country Picker Modal */}
+        <Modal visible={showCountryModal} transparent animationType="slide" onRequestClose={() => setShowCountryModal(false)}>
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerSheet}>
+              <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>Select Country</Text>
+                <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+                  <Feather name="x" size={22} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.pickerSearch}>
+                <Feather name="search" size={16} color={colors.textMuted} />
+                <TextInput
+                  style={styles.pickerSearchInput}
+                  placeholder="Search country..."
+                  placeholderTextColor={colors.textMuted}
+                  value={countrySearch}
+                  onChangeText={setCountrySearch}
+                  autoFocus
+                />
+              </View>
+              <FlatList
+                data={filteredCountries}
+                keyExtractor={(item) => item.code}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.pickerItem, selectedCountry?.code === item.code && styles.pickerItemActive]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      setSelectedCountry(item);
+                      setErrors((e) => ({ ...e, country: '' }));
+                      setShowCountryModal(false);
+                    }}
+                  >
+                    <Text style={styles.pickerItemFlag}>{item.flag}</Text>
+                    <Text style={styles.pickerItemName}>{item.name}</Text>
+                    {selectedCountry?.code === item.code && (
+                      <Feather name="check" size={16} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -579,6 +806,17 @@ const styles = StyleSheet.create({
   gradient: { flex: 1 },
   safe: { flex: 1 },
   scroll: { flexGrow: 1, padding: 24 },
+
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+
   stepsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 8, marginTop: 8 },
   stepCircle: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   stepActive: { backgroundColor: colors.primary },
@@ -592,6 +830,7 @@ const styles = StyleSheet.create({
   stepLabel: { textAlign: 'center', color: colors.textMuted, fontSize: 13, marginBottom: 20 },
   stepContent: { marginBottom: 8 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 16 },
+
   planCard: { backgroundColor: 'rgba(26,26,46,0.8)', borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 12 },
   popularBadge: { backgroundColor: 'rgba(16,185,129,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start', marginBottom: 8 },
   popularText: { color: colors.primary, fontSize: 11, fontWeight: '600' },
@@ -607,6 +846,19 @@ const styles = StyleSheet.create({
   featureText: { color: colors.textSecondary, fontSize: 14 },
   formCard: { backgroundColor: 'rgba(26,26,46,0.8)', borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 20 },
   row2: { flexDirection: 'row' },
+
+  // Phone code picker button
+  phoneCodeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+  },
+  phoneCodeFlag: { fontSize: 20 },
+  phoneCodeText: { color: colors.text, fontSize: 14, fontWeight: '600', minWidth: 36 },
+  phoneCodeDivider: { width: 1, height: 24, backgroundColor: colors.inputBorder },
+
   selectedPlanInfo: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   selectedPlanText: { color: colors.text, fontSize: 16, fontWeight: '600' },
   selectedPlanPrice: { color: colors.primary, fontSize: 16, fontWeight: '700' },
@@ -615,10 +867,34 @@ const styles = StyleSheet.create({
   secureText: { color: colors.emerald, fontSize: 13 },
   nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 14, padding: 16, gap: 8 },
   nextBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+
+  termsBox: { backgroundColor: 'rgba(26,26,46,0.8)', borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16, height: 320 },
+  termItem: { marginBottom: 16 },
+  termTitle: { color: colors.primary, fontSize: 13, fontWeight: '700', marginBottom: 4 },
+  termBody: { color: colors.textSecondary, fontSize: 13, lineHeight: 19 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: colors.inputBorder, backgroundColor: 'rgba(255,255,255,0.04)', marginBottom: 8 },
+  checkboxRowActive: { borderColor: colors.primary, backgroundColor: 'rgba(16,185,129,0.08)' },
+  checkbox: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: colors.primary, backgroundColor: 'transparent', alignItems: 'center', justifyContent: 'center', marginTop: 1, flexShrink: 0 },
+  checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkboxLabel: { flex: 1, color: colors.textSecondary, fontSize: 14, lineHeight: 21 },
+
   dateModalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
   dateModalSheet: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 30 },
   dateModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
   dateModalTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
   dateModalCancel: { color: colors.textMuted, fontSize: 16 },
   dateModalDone: { color: colors.primary, fontSize: 16, fontWeight: '700' },
+
+  // Country / Phone code picker modals
+  pickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
+  pickerSheet: { backgroundColor: '#12121a', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 30, maxHeight: '80%' },
+  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: colors.border },
+  pickerTitle: { color: colors.text, fontSize: 17, fontWeight: '700' },
+  pickerSearch: { flexDirection: 'row', alignItems: 'center', gap: 10, margin: 12, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: colors.inputBg, borderRadius: 12, borderWidth: 1, borderColor: colors.inputBorder },
+  pickerSearchInput: { flex: 1, color: colors.text, fontSize: 15 },
+  pickerItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 13, gap: 12 },
+  pickerItemActive: { backgroundColor: 'rgba(16,185,129,0.08)' },
+  pickerItemFlag: { fontSize: 24 },
+  pickerItemName: { flex: 1, color: colors.text, fontSize: 15 },
+  pickerItemCode: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
 });

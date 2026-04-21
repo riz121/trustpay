@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Modal,
+  TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,53 +30,6 @@ function InputField({ label, icon, error, required, ...props }) {
   );
 }
 
-function ToggleGroup({ label, options, value, onChange }) {
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.toggleRow}>
-        {options.map((opt) => {
-          const selected = value === opt.value;
-          return (
-            <TouchableOpacity
-              key={opt.value}
-              onPress={() => onChange(opt.value)}
-              activeOpacity={0.7}
-              style={[
-                styles.toggleBtn,
-                selected && styles.toggleBtnSelected,
-              ]}
-            >
-              <Text style={[styles.toggleBtnText, selected && styles.toggleBtnTextSelected]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
-}
-
-const GENDER_OPTIONS = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
-];
-
-const ACCOUNT_TYPE_OPTIONS = [
-  { label: 'Individual', value: 'individual' },
-  { label: 'Organisation', value: 'organisation' },
-];
-
-const HOW_HEAR_OPTIONS = [
-  { label: 'Social Media', value: 'social_media' },
-  { label: 'Friend', value: 'friend' },
-  { label: 'Google', value: 'google' },
-  { label: 'App Store', value: 'app_store' },
-  { label: 'Other', value: 'other' },
-];
-
 export default function EditProfileScreen({ navigation }) {
   const { user, updateUser } = useAuth();
 
@@ -85,23 +37,9 @@ export default function EditProfileScreen({ navigation }) {
     full_name: user?.full_name || '',
     username: user?.username || '',
     phone: user?.phone || '',
-    city: user?.city || '',
-    company: user?.company || '',
-    emirates_id: user?.emirates_id || '',
-    date_of_birth: user?.date_of_birth || '',
-    address: user?.address || '',
-    gender: user?.gender || '',
-    account_type: user?.account_type || 'individual',
-    country: user?.country || '',
-    how_did_you_hear: user?.how_did_you_hear || '',
-    vat_number: user?.vat_number || '',
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [datePickerValue, setDatePickerValue] = useState(
-    user?.date_of_birth ? new Date(user.date_of_birth) : new Date(2000, 0, 1)
-  );
 
   const setField = (key, val) => {
     setForm((p) => ({ ...p, [key]: val }));
@@ -123,23 +61,12 @@ export default function EditProfileScreen({ navigation }) {
       setErrors(e);
       return;
     }
-
     setLoading(true);
     try {
       await updateUser({
         full_name: form.full_name.trim(),
         username: form.username.trim() || undefined,
         phone: form.phone.trim() || undefined,
-        city: form.city.trim() || undefined,
-        company: form.company.trim() || undefined,
-        emirates_id: form.emirates_id.trim() || undefined,
-        date_of_birth: form.date_of_birth.trim() || undefined,
-        address: form.address.trim() || undefined,
-        gender: form.gender || undefined,
-        account_type: form.account_type || undefined,
-        country: form.country.trim() || undefined,
-        how_did_you_hear: form.how_did_you_hear || undefined,
-        vat_number: form.vat_number.trim() || undefined,
       });
       Alert.alert('Profile Updated', 'Your profile has been saved successfully.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -184,7 +111,7 @@ export default function EditProfileScreen({ navigation }) {
             <Text style={styles.avatarHint}>Avatar is auto-generated from your name</Text>
           </View>
 
-          {/* ── Personal Info ── */}
+          {/* Fields */}
           <GlassCard style={styles.formCard}>
             <Text style={styles.sectionLabel}>Personal Information</Text>
 
@@ -219,121 +146,9 @@ export default function EditProfileScreen({ navigation }) {
               keyboardType="phone-pad"
               error={errors.phone}
             />
-
-            <DatePickerField
-              label="Date of Birth"
-              value={form.date_of_birth}
-              onPress={() => setShowDatePicker(true)}
-              error={errors.date_of_birth}
-            />
-
-            <ToggleGroup
-              label="Gender"
-              options={GENDER_OPTIONS}
-              value={form.gender}
-              onChange={(v) => setField('gender', v)}
-            />
           </GlassCard>
 
-          {/* ── Location ── */}
-          <GlassCard style={styles.formCard}>
-            <Text style={styles.sectionLabel}>Location</Text>
-
-            <InputField
-              label="City"
-              icon="map-pin"
-              placeholder="Dubai"
-              value={form.city}
-              onChangeText={(v) => setField('city', v)}
-              error={errors.city}
-            />
-
-            <InputField
-              label="Country"
-              icon="globe"
-              placeholder="United Arab Emirates"
-              value={form.country}
-              onChangeText={(v) => setField('country', v)}
-              autoCapitalize="words"
-              error={errors.country}
-            />
-
-            <InputField
-              label="Address"
-              icon="home"
-              placeholder="Street, Area"
-              value={form.address}
-              onChangeText={(v) => setField('address', v)}
-              autoCapitalize="sentences"
-              error={errors.address}
-            />
-          </GlassCard>
-
-          {/* ── Business Info ── */}
-          <GlassCard style={styles.formCard}>
-            <Text style={styles.sectionLabel}>Business Information</Text>
-
-            <ToggleGroup
-              label="Account Type"
-              options={ACCOUNT_TYPE_OPTIONS}
-              value={form.account_type}
-              onChange={(v) => setField('account_type', v)}
-            />
-
-            <InputField
-              label="Company"
-              icon="briefcase"
-              placeholder="Your company name (optional)"
-              value={form.company}
-              onChangeText={(v) => setField('company', v)}
-              autoCapitalize="words"
-              error={errors.company}
-            />
-
-            <InputField
-              label="VAT Number"
-              icon="hash"
-              placeholder="VAT registration number (optional)"
-              value={form.vat_number}
-              onChangeText={(v) => setField('vat_number', v)}
-              autoCapitalize="characters"
-              error={errors.vat_number}
-            />
-
-            <InputField
-              label="Emirates ID"
-              icon="credit-card"
-              placeholder="784-XXXX-XXXXXXX-X (optional)"
-              value={form.emirates_id}
-              onChangeText={(v) => setField('emirates_id', v)}
-              keyboardType="number-pad"
-              error={errors.emirates_id}
-            />
-          </GlassCard>
-
-          {/* ── How did you hear ── */}
-          <GlassCard style={styles.formCard}>
-            <Text style={styles.sectionLabel}>How Did You Hear About Us?</Text>
-            <View style={[styles.toggleRow, { flexWrap: 'wrap' }]}>
-              {HOW_HEAR_OPTIONS.map((opt) => {
-                const selected = form.how_did_you_hear === opt.value;
-                return (
-                  <TouchableOpacity
-                    key={opt.value}
-                    onPress={() => setField('how_did_you_hear', opt.value)}
-                    activeOpacity={0.7}
-                    style={[styles.toggleBtn, selected && styles.toggleBtnSelected]}
-                  >
-                    <Text style={[styles.toggleBtnText, selected && styles.toggleBtnTextSelected]}>
-                      {opt.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </GlassCard>
-
-          {/* ── Account (read-only) ── */}
+          {/* Account (read-only) */}
           <GlassCard style={styles.formCard}>
             <Text style={styles.sectionLabel}>Account</Text>
             <View style={styles.readonlyField}>
@@ -377,74 +192,6 @@ export default function EditProfileScreen({ navigation }) {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      {Platform.OS === 'android' && showDatePicker && (
-        <DateTimePicker
-          value={datePickerValue}
-          mode="date"
-          display="default"
-          maximumDate={new Date()}
-          onChange={(event, selected) => {
-            setShowDatePicker(false);
-            if (event.type === 'set' && selected) {
-              setDatePickerValue(selected);
-              setField('date_of_birth', selected.toISOString().split('T')[0]);
-            }
-          }}
-        />
-      )}
-      {Platform.OS === 'ios' && (
-        <Modal visible={showDatePicker} transparent animationType="slide">
-          <View style={styles.dateModalOverlay}>
-            <View style={styles.dateModalSheet}>
-              <View style={styles.dateModalHeader}>
-                <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                  <Text style={styles.dateModalCancel}>Cancel</Text>
-                </TouchableOpacity>
-                <Text style={styles.dateModalTitle}>Date of Birth</Text>
-                <TouchableOpacity onPress={() => {
-                  setField('date_of_birth', datePickerValue.toISOString().split('T')[0]);
-                  setShowDatePicker(false);
-                }}>
-                  <Text style={styles.dateModalDone}>Done</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={datePickerValue}
-                mode="date"
-                display="spinner"
-                maximumDate={new Date()}
-                textColor={colors.text}
-                onChange={(_, selected) => { if (selected) setDatePickerValue(selected); }}
-                style={{ height: 200 }}
-              />
-            </View>
-          </View>
-        </Modal>
-      )}
-    </View>
-  );
-}
-
-function DatePickerField({ label, value, onPress, error }) {
-  const display = value
-    ? new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : '';
-  return (
-    <View style={styles.inputGroup}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.7}
-        style={[styles.inputWrapper, error && styles.inputWrapperError]}
-      >
-        <Feather name="calendar" size={18} color={colors.textMuted} style={styles.inputIcon} />
-        <Text style={[styles.textInput, { lineHeight: 48, color: value ? colors.text : colors.textMuted }]}>
-          {display || 'Select date'}
-        </Text>
-        <Feather name="chevron-down" size={16} color={colors.textMuted} style={{ marginRight: 14 }} />
-      </TouchableOpacity>
-      {error ? <Text style={styles.inputError}>{error}</Text> : null}
     </View>
   );
 }
@@ -502,23 +249,6 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, color: colors.text, fontSize: 15, padding: 13, paddingLeft: 0 },
   inputError: { color: colors.destructive, fontSize: 12, marginTop: 4 },
 
-  // Toggle buttons
-  toggleRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  toggleBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.inputBg,
-  },
-  toggleBtnSelected: {
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(16,185,129,0.15)',
-  },
-  toggleBtnText: { color: colors.textMuted, fontSize: 13, fontWeight: '500' },
-  toggleBtnTextSelected: { color: colors.primary, fontWeight: '600' },
-
   readonlyField: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -549,10 +279,4 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   saveBtnText: { color: '#fff', fontSize: 17, fontWeight: '700' },
-  dateModalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
-  dateModalSheet: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 30 },
-  dateModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
-  dateModalTitle: { color: colors.text, fontSize: 16, fontWeight: '600' },
-  dateModalCancel: { color: colors.textMuted, fontSize: 16 },
-  dateModalDone: { color: colors.primary, fontSize: 16, fontWeight: '700' },
 });

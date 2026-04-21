@@ -7,22 +7,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { authApi } from '../../api/apiClient';
 import { colors } from '../../theme/colors';
 
 const FEATURES = [
-  { icon: 'shield', text: 'Funds held securely in UAE-regulated accounts' },
+  { icon: 'shield', text: 'Funds held securely in regulated accounts' },
   { icon: 'zap', text: 'Instant status updates for both parties' },
-  { icon: 'users', text: 'Trusted by buyers & sellers across the UAE' },
+  { icon: 'users', text: 'Trusted by buyers & sellers across the world' },
 ];
 
 export default function LoginScreen({ navigation }) {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState('landing'); // landing | signin | register | verify
+  const [mode, setMode] = useState('landing'); // landing | signin | register | verify | forgot
   const [form, setForm] = useState({ full_name: '', username: '', email: '', password: '', otp: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const setField = (key, val) => {
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -47,7 +49,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const handleRegister = async () => {
-    if (!form.full_name.trim() || !form.email.trim() || !form.password.trim()) {
+    if (!form.full_name.trim() || !form.email.trim() || !form.password.trim() || !form.username.trim()) {
       setError('Please fill in all fields.');
       return;
     }
@@ -55,8 +57,8 @@ export default function LoginScreen({ navigation }) {
       setError('Password must be at least 6 characters.');
       return;
     }
-    if (form.username.trim() && !/^[a-z0-9_]{3,30}$/.test(form.username.trim())) {
-      setError('Username can only contain lowercase letters, numbers, and underscores (3–30 chars).');
+    if (!/^[a-z0-9_]{3,30}$/.test(form.username.trim())) {
+      setError('Username must be 3–30 characters: lowercase letters, numbers, underscores only.');
       return;
     }
     setLoading(true);
@@ -66,7 +68,7 @@ export default function LoginScreen({ navigation }) {
         form.full_name.trim(),
         form.email.trim(),
         form.password,
-        form.username.trim() || undefined,
+        form.username.trim(),
       );
       if (data.requires_verification) {
         setRequiresVerification(true);
@@ -101,8 +103,26 @@ export default function LoginScreen({ navigation }) {
     Alert.alert('Code Resent', 'A new verification code has been sent to your email.');
   };
 
+  const handleForgotPassword = async () => {
+    if (!form.email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      await authApi.forgotPassword(form.email.trim());
+      setForgotSent(true);
+    } catch (e) {
+      setError(e.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const back = () => {
     setError('');
+    setForgotSent(false);
     setMode('landing');
   };
 
@@ -121,7 +141,7 @@ export default function LoginScreen({ navigation }) {
                 <Feather name="shield" size={24} color={colors.emerald} />
               </View>
               <View>
-                <Text style={styles.appName}>TrustPay</Text>
+                <Text style={styles.appName}>Trustdepo</Text>
                 <Text style={styles.appRegion}>UAE</Text>
               </View>
             </View>
@@ -134,8 +154,7 @@ export default function LoginScreen({ navigation }) {
               </View>
 
               <Text style={styles.headline}>
-                The smarter way{'\n'}to pay in the{' '}
-                <Text style={styles.headlineAccent}>UAE</Text>
+                The smarter way{'\n'}to pay
               </Text>
 
               <Text style={styles.subtitle}>
@@ -201,13 +220,15 @@ export default function LoginScreen({ navigation }) {
                 <Feather name="shield" size={22} color="#fff" />
               </LinearGradient>
               <Text style={styles.formTitle}>
-                {mode === 'signin' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : 'Verify Email'}
+                {mode === 'signin' ? 'Welcome Back' : mode === 'register' ? 'Create Account' : mode === 'forgot' ? 'Reset Password' : 'Verify Email'}
               </Text>
               <Text style={styles.formSubtitle}>
                 {mode === 'signin'
-                  ? 'Sign in to your TrustPay account'
+                  ? 'Sign in to your Trustdepo account'
                   : mode === 'register'
-                  ? 'Join TrustPay to get started'
+                  ? 'Join Trustdepo to get started'
+                  : mode === 'forgot'
+                  ? 'Enter your email to receive a reset link'
                   : `Enter the verification code sent to ${form.email}`}
               </Text>
             </View>
@@ -240,7 +261,7 @@ export default function LoginScreen({ navigation }) {
 
               {mode === 'register' && (
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>@Username <Text style={{ color: colors.textMuted, fontSize: 12 }}>(optional)</Text></Text>
+                  <Text style={styles.fieldLabel}>@Username</Text>
                   <View style={styles.inputWrapper}>
                     <Feather name="at-sign" size={18} color={colors.textMuted} style={styles.inputIcon} />
                     <TextInput
@@ -275,6 +296,33 @@ export default function LoginScreen({ navigation }) {
                     />
                   </View>
                 </View>
+              )}
+
+              {mode === 'forgot' && (
+                forgotSent ? (
+                  <View style={styles.successBanner}>
+                    <Feather name="check-circle" size={18} color="#10b981" />
+                    <Text style={styles.successBannerText}>Reset link sent! Check your email inbox.</Text>
+                  </View>
+                ) : (
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Email Address</Text>
+                    <View style={styles.inputWrapper}>
+                      <Feather name="mail" size={18} color={colors.textMuted} style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.textInput}
+                        placeholder="you@example.com"
+                        placeholderTextColor={colors.textMuted}
+                        value={form.email}
+                        onChangeText={(v) => setField('email', v)}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        returnKeyType="done"
+                        onSubmitEditing={handleForgotPassword}
+                      />
+                    </View>
+                  </View>
+                )
               )}
 
               {(mode === 'signin' || mode === 'register') && (
@@ -322,22 +370,30 @@ export default function LoginScreen({ navigation }) {
                 </View>
               )}
 
-              <TouchableOpacity
-                onPress={mode === 'signin' ? handleSignIn : mode === 'register' ? handleRegister : handleVerify}
-                activeOpacity={0.8}
-                disabled={loading}
-                style={{ marginTop: 8 }}
-              >
-                <LinearGradient colors={['#059669', '#10b981']} style={styles.submitBtn}>
-                  {loading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.submitBtnText}>
-                      {mode === 'signin' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Verify'}
-                    </Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
+              {(!forgotSent) && (
+                <TouchableOpacity
+                  onPress={mode === 'signin' ? handleSignIn : mode === 'register' ? handleRegister : mode === 'forgot' ? handleForgotPassword : handleVerify}
+                  activeOpacity={0.8}
+                  disabled={loading}
+                  style={{ marginTop: 8 }}
+                >
+                  <LinearGradient colors={['#059669', '#10b981']} style={styles.submitBtn}>
+                    {loading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.submitBtnText}>
+                        {mode === 'signin' ? 'Sign In' : mode === 'register' ? 'Create Account' : mode === 'forgot' ? 'Send Reset Link' : 'Verify'}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+
+              {mode === 'signin' && (
+                <TouchableOpacity onPress={() => { setError(''); setForgotSent(false); setMode('forgot'); }} style={styles.switchLink} activeOpacity={0.7}>
+                  <Text style={styles.switchLinkText}>Forgot your password? <Text style={styles.switchLinkBold}>Reset it</Text></Text>
+                </TouchableOpacity>
+              )}
 
               {mode === 'verify' && (
                 <TouchableOpacity onPress={handleResend} style={styles.switchLink} activeOpacity={0.7}>
@@ -345,7 +401,7 @@ export default function LoginScreen({ navigation }) {
                 </TouchableOpacity>
               )}
 
-              {mode !== 'verify' && (
+              {(mode === 'signin' || mode === 'register') && (
                 <TouchableOpacity
                   onPress={() => { setError(''); setMode(mode === 'signin' ? 'register' : 'signin'); }}
                   style={styles.switchLink}
@@ -355,6 +411,12 @@ export default function LoginScreen({ navigation }) {
                     {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
                     <Text style={styles.switchLinkBold}>{mode === 'signin' ? 'Register' : 'Sign In'}</Text>
                   </Text>
+                </TouchableOpacity>
+              )}
+
+              {mode === 'forgot' && (
+                <TouchableOpacity onPress={() => { setError(''); setForgotSent(false); setMode('signin'); }} style={styles.switchLink} activeOpacity={0.7}>
+                  <Text style={styles.switchLinkText}>Remember it? <Text style={styles.switchLinkBold}>Sign In</Text></Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -420,4 +482,6 @@ const styles = StyleSheet.create({
   switchLinkBold: { color: colors.primary, fontWeight: '600' },
   errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 10, padding: 12, marginBottom: 16, gap: 8 },
   errorBannerText: { color: colors.destructive, fontSize: 14, flex: 1 },
+  successBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16,185,129,0.1)', borderRadius: 10, padding: 16, gap: 10, marginBottom: 8 },
+  successBannerText: { color: '#10b981', fontSize: 14, flex: 1, lineHeight: 20 },
 });

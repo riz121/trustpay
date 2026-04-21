@@ -1,4 +1,5 @@
 import React from 'react';
+import { StripeProvider } from '@stripe/stripe-react-native';
 import { View, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -22,6 +23,10 @@ import ProfileScreen from '../screens/main/ProfileScreen';
 import EditProfileScreen from '../screens/main/EditProfileScreen';
 import FAQScreen from '../screens/main/FAQScreen';
 import TermsScreen from '../screens/main/TermsScreen';
+import PrivacyPolicyScreen from '../screens/main/PrivacyPolicyScreen';
+import SecurityScreen from '../screens/main/SecurityScreen';
+import LiveChatScreen from '../screens/main/LiveChatScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -50,7 +55,9 @@ function HomeStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Dashboard" component={DashboardScreen} />
       <Stack.Screen name="NewTransaction" component={NewTransactionScreen} />
+      <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
       <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
     </Stack.Navigator>
   );
 }
@@ -81,8 +88,13 @@ function ProfileStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="TransactionsList" component={TransactionsScreen} />
+      <Stack.Screen name="TransactionDetail" component={TransactionDetailScreen} />
       <Stack.Screen name="FAQ" component={FAQScreen} />
       <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="Security" component={SecurityScreen} />
+      <Stack.Screen name="LiveChat" component={LiveChatScreen} />
     </Stack.Navigator>
   );
 }
@@ -127,6 +139,7 @@ function MainTabs() {
         tabBarIcon: ({ color, size }) => {
           const icons = {
             Home: 'home',
+            Transactions: 'list',
             Payments: 'credit-card',
             Profile: 'user',
           };
@@ -135,6 +148,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeStack} />
+      <Tab.Screen name="Transactions" component={TransactionsStack} />
       <Tab.Screen
         name="New"
         component={NewStack}
@@ -178,7 +192,11 @@ export default function AppNavigator() {
     );
   }
 
-  return <MainTabs />;
+  return (
+    <StripeProvider publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''}>
+      <MainTabs />
+    </StripeProvider>
+  );
 }
 
 const tabStyles = StyleSheet.create({

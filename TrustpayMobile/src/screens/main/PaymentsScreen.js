@@ -9,7 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext';
-import { transactionApi, bankApi, withdrawalApi } from '../../api/apiClient';
+import { transactionApi, bankApi, withdrawalApi, paymentApi, connectApi } from '../../api/apiClient';
+import { useStripe } from '@stripe/stripe-react-native';
 import GlassCard from '../../components/GlassCard';
 import { colors } from '../../theme/colors';
 
@@ -138,59 +139,48 @@ function TransactionLogTab({ transactions, userEmail, isLoading, refetch, isRefe
 // ── Tab: Withdraw to Bank ──────────────────────────────────────────────────────
 function WithdrawTab({ availableBalance }) {
   const queryClient = useQueryClient();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [bankForm, setBankForm] = useState({ bank_name: '', iban: '', account_name: '' });
-  const [bankErrors, setBankErrors] = useState({});
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [showBankForm, setShowBankForm] = useState(false);
+  const [holderName, setHolderName] = useState('');
+  const [iban, setIban] = useState('');
 
-  const { data: bankAccounts, isLoading: loadingBanks, refetch: refetchBanks } = useQuery({
-    queryKey: ['bankAccounts'],
-    queryFn: bankApi.getAll,
+  const { data: connectStatus, isLoading: loadingStatus, refetch: refetchStatus } = useQuery({
+    queryKey: ['connectStatus'],
+    queryFn: connectApi.getStatus,
   });
 
-  const addBankMutation = useMutation({
-    mutationFn: bankApi.add,
+  const connectMutation = useMutation({
+    mutationFn: () => connectApi.addBankAccount(holderName.trim(), iban.trim()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bankAccounts'] });
-      setBankForm({ bank_name: '', iban: '', account_name: '' });
-      setShowAddForm(false);
-      Alert.alert('Success', 'Bank account added successfully!');
+      setShowBankForm(false);
+      setHolderName('');
+      setIban('');
+      refetchStatus();
+      Alert.alert('Bank Connected!', 'Your bank account has been connected via Stripe. You can now request withdrawals.');
     },
-    onError: (e) => Alert.alert('Error', e.message || 'Failed to add bank account'),
+    onError: (e) => Alert.alert('Connection Failed', e.message || 'Failed to connect bank account'),
   });
 
   const withdrawMutation = useMutation({
     mutationFn: (amount) => withdrawalApi.request(amount),
     onSuccess: () => {
       setWithdrawAmount('');
-      Alert.alert('Withdrawal Requested', 'Your withdrawal request has been submitted. Funds will be transferred within 1-3 business days.');
+      Alert.alert('Withdrawal Requested', 'Your request has been submitted. Admin will approve and Stripe will transfer to your bank within 1-3 business days.');
     },
     onError: (e) => Alert.alert('Error', e.message || 'Failed to submit withdrawal request'),
   });
 
-  const setBankField = (key, val) => {
-    setBankForm((p) => ({ ...p, [key]: val }));
-    setBankErrors((e) => ({ ...e, [key]: '' }));
-  };
-
-  const validateBankForm = () => {
-    const e = {};
-    if (!bankForm.bank_name.trim()) e.bank_name = 'Bank name is required';
-    if (!bankForm.iban.trim()) e.iban = 'IBAN is required';
-    else if (bankForm.iban.trim().length < 15) e.iban = 'Enter a valid IBAN';
-    if (!bankForm.account_name.trim()) e.account_name = 'Account name is required';
-    return e;
-  };
-
-  const handleAddBank = () => {
-    const e = validateBankForm();
-    if (Object.keys(e).length) { setBankErrors(e); return; }
-    addBankMutation.mutate({
-      bank_name: bankForm.bank_name.trim(),
-      iban: bankForm.iban.trim().toUpperCase(),
-      account_name: bankForm.account_name.trim(),
-    });
+  const handleConnectSubmit = () => {
+    if (!holderName.trim()) {
+      Alert.alert('Required', 'Please enter the account holder name.');
+      return;
+    }
+    const cleanIban = iban.trim().toUpperCase().replace(/\s/g, '');
+    if (cleanIban.length < 15) {
+      Alert.alert('Invalid IBAN', 'Please enter a valid IBAN.');
+      return;
+    }
+    connectMutation.mutate();
   };
 
   const handleWithdraw = () => {
@@ -207,13 +197,9 @@ function WithdrawTab({ availableBalance }) {
       Alert.alert('Insufficient Balance', `Your available balance is AED ${formatAmount(availableBalance)}.`);
       return;
     }
-    if (!selectedAccountId) {
-      Alert.alert('Select Account', 'Please select a bank account to withdraw to.');
-      return;
-    }
     Alert.alert(
       'Confirm Withdrawal',
-      `Withdraw AED ${formatAmount(amount)} to your selected bank account?`,
+      `Request withdrawal of AED ${formatAmount(amount)}?\n\nAdmin will approve and Stripe will transfer to your bank.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Confirm', onPress: () => withdrawMutation.mutate(amount) },
@@ -221,9 +207,15 @@ function WithdrawTab({ availableBalance }) {
     );
   };
 
+  if (loadingStatus) {
+    return <View style={styles.centerContainer}><ActivityIndicator color={colors.primary} size="large" /></View>;
+  }
+
+  const isOnboarded = connectStatus?.onboarded;
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.withdrawScroll}>
-      {/* Available Balance Summary */}
+      {/* Available Balance */}
       <GlassCard style={styles.availableCard}>
         <View style={styles.availableRow}>
           <View style={[styles.availableIconWrap, { backgroundColor: 'rgba(52,211,153,0.15)' }]}>
@@ -237,121 +229,219 @@ function WithdrawTab({ availableBalance }) {
         <Text style={styles.availableNote}>Min. withdrawal: AED 100.00</Text>
       </GlassCard>
 
-      {/* Bank Accounts Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Bank Accounts</Text>
-        <TouchableOpacity
-          onPress={() => setShowAddForm((p) => !p)}
-          style={styles.addBankBtn}
-          activeOpacity={0.8}
-        >
-          <Feather name={showAddForm ? 'x' : 'plus'} size={16} color={colors.primary} />
-          <Text style={styles.addBankBtnText}>{showAddForm ? 'Cancel' : 'Add Account'}</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Stripe Connect Status / Bank Form */}
+      <GlassCard style={styles.connectCard}>
+        <View style={styles.connectRow}>
+          <View style={[styles.connectIcon, { backgroundColor: isOnboarded ? 'rgba(16,185,129,0.15)' : 'rgba(139,92,246,0.15)' }]}>
+            <Feather name={isOnboarded ? 'check-circle' : 'credit-card'} size={20} color={isOnboarded ? colors.emerald : colors.accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.connectTitle}>Bank Account</Text>
+            <Text style={styles.connectSubtitle}>
+              {isOnboarded ? 'Connected via Stripe ✓' : 'Add your bank account to receive withdrawals'}
+            </Text>
+          </View>
+          {!isOnboarded && !showBankForm && (
+            <TouchableOpacity
+              onPress={() => setShowBankForm(true)}
+              style={styles.connectBtn}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.connectBtnText}>Add Bank</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-      {/* Add Bank Account Form */}
-      {showAddForm && (
-        <GlassCard style={styles.addBankCard}>
-          <Text style={styles.addBankTitle}>Add Bank Account</Text>
+        {/* In-app bank details form */}
+        {!isOnboarded && showBankForm && (
+          <View style={{ marginTop: 16 }}>
+            <BankInputField
+              label="Account Holder Name"
+              icon="user"
+              placeholder="Full name as on bank account"
+              value={holderName}
+              onChangeText={setHolderName}
+              autoCapitalize="words"
+            />
+            <BankInputField
+              label="IBAN"
+              icon="hash"
+              placeholder="AE07 0331 2345 6789 0123 456"
+              value={iban}
+              onChangeText={(v) => setIban(v.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+            />
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+              <TouchableOpacity
+                onPress={() => { setShowBankForm(false); setHolderName(''); setIban(''); }}
+                style={[styles.connectFormBtn, { backgroundColor: 'rgba(255,255,255,0.06)', flex: 1 }]}
+                activeOpacity={0.8}
+              >
+                <Text style={{ color: colors.textMuted, fontSize: 14, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleConnectSubmit}
+                disabled={connectMutation.isPending}
+                style={[styles.connectFormBtn, { backgroundColor: colors.accent, flex: 2 }]}
+                activeOpacity={0.8}
+              >
+                {connectMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Connect Bank Account</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.connectNote, { marginTop: 10 }]}>
+              Your bank details are securely stored by Stripe. One-time setup — required for withdrawal payouts.
+            </Text>
+          </View>
+        )}
+      </GlassCard>
 
-          <BankInputField
-            label="Bank Name *"
-            icon="briefcase"
-            placeholder="e.g. Emirates NBD"
-            value={bankForm.bank_name}
-            onChangeText={(v) => setBankField('bank_name', v)}
-            error={bankErrors.bank_name}
-          />
-          <BankInputField
-            label="IBAN *"
-            icon="hash"
-            placeholder="AE070331234567890123456"
-            value={bankForm.iban}
-            onChangeText={(v) => setBankField('iban', v.replace(/\s/g, ''))}
-            autoCapitalize="characters"
-            error={bankErrors.iban}
-          />
-          <BankInputField
-            label="Account Holder Name *"
-            icon="user"
-            placeholder="Full name as on account"
-            value={bankForm.account_name}
-            onChangeText={(v) => setBankField('account_name', v)}
-            autoCapitalize="words"
-            error={bankErrors.account_name}
-          />
+      {/* Withdrawal Amount — only show if connected */}
+      {isOnboarded && (
+        <GlassCard style={styles.withdrawCard}>
+          <Text style={styles.sectionTitle}>Withdrawal Amount</Text>
+          <Text style={styles.withdrawHint}>Minimum: AED 100.00</Text>
+          <View style={styles.amountInputRow}>
+            <View style={styles.amountInputWrap}>
+              <Text style={styles.currencyLabel}>AED</Text>
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted}
+                value={withdrawAmount}
+                onChangeText={(v) => setWithdrawAmount(v.replace(/[^0-9.]/g, ''))}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            <TouchableOpacity
+              onPress={() => setWithdrawAmount(String(Math.floor(availableBalance)))}
+              style={styles.maxBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.maxBtnText}>MAX</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            onPress={handleAddBank}
-            disabled={addBankMutation.isPending}
+            onPress={handleWithdraw}
+            disabled={withdrawMutation.isPending || availableBalance <= 0}
             activeOpacity={0.8}
-            style={{ marginTop: 4 }}
+            style={{ marginTop: 16 }}
           >
-            <LinearGradient colors={['#059669', '#10b981']} style={styles.addBankSubmitBtn}>
-              {addBankMutation.isPending ? (
+            <LinearGradient
+              colors={availableBalance > 0 ? ['#059669', '#34d399'] : ['#374151', '#1f2937']}
+              style={styles.withdrawBtn}
+            >
+              {withdrawMutation.isPending ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>
-                  <Feather name="plus" size={18} color="#fff" />
-                  <Text style={styles.addBankSubmitText}>Add Bank Account</Text>
+                  <Feather name="arrow-up-circle" size={20} color="#fff" />
+                  <Text style={styles.withdrawBtnText}>Request Withdrawal</Text>
                 </>
               )}
             </LinearGradient>
           </TouchableOpacity>
         </GlassCard>
       )}
+    </ScrollView>
+  );
+}
 
-      {/* Existing Bank Accounts */}
-      {loadingBanks ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : !bankAccounts || bankAccounts.length === 0 ? (
-        <GlassCard style={styles.noBanksCard}>
-          <Feather name="credit-card" size={32} color={colors.textMuted} />
-          <Text style={styles.noBanksText}>No bank accounts added</Text>
-          <Text style={styles.noBanksSubtext}>Add a bank account to withdraw funds</Text>
-        </GlassCard>
-      ) : (
-        <View style={styles.bankList}>
-          {bankAccounts.map((acct) => {
-            const id = acct.id || acct._id;
-            const isSelected = selectedAccountId === id;
-            return (
-              <TouchableOpacity
-                key={id}
-                onPress={() => setSelectedAccountId(isSelected ? null : id)}
-                activeOpacity={0.8}
-                style={[styles.bankAccountCard, isSelected && styles.bankAccountCardSelected]}
-              >
-                <View style={[styles.bankIconWrap, isSelected && { backgroundColor: 'rgba(16,185,129,0.2)' }]}>
-                  <Feather name="credit-card" size={20} color={isSelected ? colors.primary : colors.textMuted} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.bankName}>{acct.bank_name}</Text>
-                  <Text style={styles.bankIban}>
-                    {acct.iban
-                      ? `${acct.iban.slice(0, 4)} •••• •••• ${acct.iban.slice(-4)}`
-                      : 'IBAN not available'}
-                  </Text>
-                  <Text style={styles.bankAccountName}>{acct.account_name}</Text>
-                </View>
-                {isSelected && (
-                  <View style={styles.selectedCheckWrap}>
-                    <Feather name="check-circle" size={20} color={colors.primary} />
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      )}
+// ── Tab: Deposit via Stripe ────────────────────────────────────────────────────
+function DepositTab() {
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
 
-      {/* Withdrawal Amount */}
-      <GlassCard style={styles.withdrawCard}>
-        <Text style={styles.sectionTitle}>Withdrawal Amount</Text>
-        <Text style={styles.withdrawHint}>Minimum: AED 100.00</Text>
+  const PRESETS = [100, 250, 500, 1000];
+
+  const handleDeposit = async () => {
+    const num = Number(amount);
+    if (!amount || isNaN(num) || num < 2) {
+      Alert.alert('Invalid Amount', 'Minimum deposit is AED 2.00');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { clientSecret } = await paymentApi.createPaymentIntent(num);
+
+      const { error: initError } = await initPaymentSheet({
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: 'Trustdepo',
+        style: 'alwaysDark',
+        appearance: {
+          colors: {
+            primary: '#10b981',
+            background: '#0a0a0f',
+            componentBackground: '#13131f',
+            componentBorder: '#1e1e2e',
+            componentDivider: '#1e1e2e',
+            primaryText: '#ffffff',
+            secondaryText: '#94a3b8',
+            componentText: '#ffffff',
+            placeholderText: '#64748b',
+          },
+        },
+      });
+
+      if (initError) {
+        Alert.alert('Error', initError.message);
+        return;
+      }
+
+      const { error: presentError } = await presentPaymentSheet();
+
+      if (presentError) {
+        if (presentError.code !== 'Canceled') {
+          Alert.alert('Payment Failed', presentError.message);
+        }
+      } else {
+        Alert.alert('Deposit Successful!', `AED ${formatAmount(num)} has been added to your account.`);
+        setAmount('');
+      }
+    } catch (err) {
+      Alert.alert('Error', err.message || 'Failed to process payment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.withdrawScroll}>
+      <GlassCard style={styles.depositCard}>
+        <View style={styles.depositIconRow}>
+          <View style={[styles.depositIconWrap, { backgroundColor: 'rgba(16,185,129,0.15)' }]}>
+            <Feather name="arrow-down-circle" size={22} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.depositTitle}>Deposit Funds</Text>
+            <Text style={styles.depositSubtitle}>Add money via credit or debit card</Text>
+          </View>
+        </View>
+
+        {/* Preset amounts */}
+        <View style={styles.presetsRow}>
+          {PRESETS.map((p) => (
+            <TouchableOpacity
+              key={p}
+              onPress={() => setAmount(String(p))}
+              style={[styles.presetBtn, amount === String(p) && styles.presetBtnActive]}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.presetText, amount === String(p) && styles.presetTextActive]}>
+                {p}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Custom amount input */}
         <View style={styles.amountInputRow}>
           <View style={styles.amountInputWrap}>
             <Text style={styles.currencyLabel}>AED</Text>
@@ -359,41 +449,39 @@ function WithdrawTab({ availableBalance }) {
               style={styles.amountInput}
               placeholder="0.00"
               placeholderTextColor={colors.textMuted}
-              value={withdrawAmount}
-              onChangeText={(v) => setWithdrawAmount(v.replace(/[^0-9.]/g, ''))}
+              value={amount}
+              onChangeText={(v) => setAmount(v.replace(/[^0-9.]/g, ''))}
               keyboardType="decimal-pad"
             />
           </View>
-          <TouchableOpacity
-            onPress={() => setWithdrawAmount(String(Math.floor(availableBalance)))}
-            style={styles.maxBtn}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.maxBtnText}>MAX</Text>
-          </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          onPress={handleWithdraw}
-          disabled={withdrawMutation.isPending || availableBalance <= 0}
+          onPress={handleDeposit}
+          disabled={loading || !amount}
           activeOpacity={0.8}
           style={{ marginTop: 16 }}
         >
           <LinearGradient
-            colors={availableBalance > 0 ? ['#059669', '#34d399'] : ['#374151', '#1f2937']}
+            colors={amount ? ['#059669', '#34d399'] : ['#374151', '#1f2937']}
             style={styles.withdrawBtn}
           >
-            {withdrawMutation.isPending ? (
+            {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Feather name="arrow-up-circle" size={20} color="#fff" />
-                <Text style={styles.withdrawBtnText}>Request Withdrawal</Text>
+                <Feather name="credit-card" size={20} color="#fff" />
+                <Text style={styles.withdrawBtnText}>Pay with Card</Text>
               </>
             )}
           </LinearGradient>
         </TouchableOpacity>
       </GlassCard>
+
+      <View style={styles.secureNote}>
+        <Feather name="lock" size={13} color={colors.textMuted} />
+        <Text style={styles.secureNoteText}>Payments are secured by Stripe</Text>
+      </View>
     </ScrollView>
   );
 }
@@ -417,7 +505,7 @@ function BankInputField({ label, icon, error, ...props }) {
 }
 
 // ── Main Screen ────────────────────────────────────────────────────────────────
-export default function PaymentsScreen() {
+export default function PaymentsScreen({ navigation }) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('log');
 
@@ -442,6 +530,11 @@ export default function PaymentsScreen() {
       <LinearGradient colors={['#1a1a2e', '#0a0a0f']} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
+            {navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                <Feather name="arrow-left" size={22} color={colors.text} />
+              </TouchableOpacity>
+            ) : null}
             <Text style={styles.headerTitle}>Payments</Text>
           </View>
 
@@ -475,7 +568,16 @@ export default function PaymentsScreen() {
               activeOpacity={0.8}
             >
               <Text style={[styles.tabText, activeTab === 'log' && styles.tabTextActive]}>
-                Transaction Log
+                History
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'deposit' && styles.tabActive]}
+              onPress={() => setActiveTab('deposit')}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.tabText, activeTab === 'deposit' && styles.tabTextActive]}>
+                Deposit
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -484,7 +586,7 @@ export default function PaymentsScreen() {
               activeOpacity={0.8}
             >
               <Text style={[styles.tabText, activeTab === 'withdraw' && styles.tabTextActive]}>
-                Withdraw to Bank
+                Withdraw
               </Text>
             </TouchableOpacity>
           </View>
@@ -504,6 +606,8 @@ export default function PaymentsScreen() {
             refetch={refetchTx}
             isRefetching={isRefetching}
           />
+        ) : activeTab === 'deposit' ? (
+          <DepositTab />
         ) : (
           <WithdrawTab availableBalance={available} />
         )}
@@ -517,8 +621,9 @@ const styles = StyleSheet.create({
 
   // Header
   header: { paddingBottom: 0 },
-  headerContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
 
   // Balance row
   balanceRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 16 },
@@ -659,6 +764,15 @@ const styles = StyleSheet.create({
   bankAccountName: { color: colors.textMuted, fontSize: 12 },
   selectedCheckWrap: { marginLeft: 'auto' },
 
+  connectCard: { marginBottom: 16, padding: 16 },
+  connectRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  connectIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  connectTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  connectSubtitle: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  connectBtn: { backgroundColor: colors.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  connectBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  connectNote: { color: colors.textMuted, fontSize: 12, marginTop: 10, lineHeight: 18 },
+  connectFormBtn: { paddingVertical: 13, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   withdrawCard: { padding: 16 },
   withdrawHint: { color: colors.textMuted, fontSize: 12, marginBottom: 12 },
   amountInputRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -693,6 +807,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   withdrawBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  // Deposit tab
+  depositCard: { marginBottom: 16, padding: 16 },
+  depositIconRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
+  depositIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  depositTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
+  depositSubtitle: { color: colors.textMuted, fontSize: 13, marginTop: 2 },
+  presetsRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  presetBtn: {
+    flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center',
+    borderWidth: 1, borderColor: colors.inputBorder, backgroundColor: colors.inputBg,
+  },
+  presetBtnActive: { borderColor: colors.primary, backgroundColor: 'rgba(16,185,129,0.15)' },
+  presetText: { color: colors.textMuted, fontSize: 14, fontWeight: '600' },
+  presetTextActive: { color: colors.primary },
+  secureNote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 },
+  secureNoteText: { color: colors.textMuted, fontSize: 12 },
 
   // Common
   centerContainer: { padding: 32, alignItems: 'center', justifyContent: 'center' },

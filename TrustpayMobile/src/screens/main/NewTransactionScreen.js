@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
@@ -7,24 +7,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { transactionApi, api } from '../../api/apiClient';
+import { useFocusEffect } from '@react-navigation/native';
+import { transactionApi, api, paymentApi } from '../../api/apiClient';
+import { useStripe } from '@stripe/stripe-react-native';
 import GlassCard from '../../components/GlassCard';
 import { colors } from '../../theme/colors';
 
+const EMPTY_FORM = {
+  title: '', amount: '', receiver_email: '', receiver_username: '',
+  receiver_name: '', notes: '', release_date: '',
+};
+
 export default function NewTransactionScreen({ navigation }) {
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({
-    title: '',
-    amount: '',
-    receiver_email: '',
-    receiver_username: '',
-    receiver_name: '',
-    notes: '',
-    release_date: '',
-  });
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [lookupLoading, setLookupLoading] = useState(false);
   const [receiverMode, setReceiverMode] = useState('email'); // 'email' | 'username'
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+
+  // Reset form every time this screen is focused (handles back-navigation & tab press)
+  useFocusEffect(
+    useCallback(() => {
+      setForm(EMPTY_FORM);
+      setErrors({});
+      setLookupLoading(false);
+      setReceiverMode('email');
+    }, [])
+  );
 
   const setField = (key, val) => {
     setForm((p) => ({ ...p, [key]: val }));
@@ -64,6 +75,8 @@ export default function NewTransactionScreen({ navigation }) {
       e.amount = 'Amount is required';
     } else if (isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
       e.amount = 'Enter a valid amount';
+    } else if (Number(form.amount) < 2) {
+      e.amount = 'Minimum amount is AED 2.00';
     }
     if (!form.receiver_email.trim()) {
       e.receiver_email = 'Receiver email is required';
@@ -83,24 +96,76 @@ export default function NewTransactionScreen({ navigation }) {
         notes: form.notes.trim() || undefined,
         release_date: form.release_date.trim() || undefined,
       }),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       const txId = data?.id || data?._id || data?.transaction?.id;
-      Alert.alert('Transaction Created!', 'Your payment has been created successfully.', [
-        {
-          text: 'View Transaction',
-          onPress: () => {
-            if (txId) {
-              navigation.replace('TransactionDetail', {
-                transactionId: txId,
-                transaction: data?.transaction || data,
-              });
-            } else {
-              navigation.goBack();
-            }
+      const txData = data?.transaction || data;
+
+      if (!txId) {
+        Alert.alert('Error', 'Transaction created but ID missing.');
+        navigation.getParent()?.navigate('Home');
+        return;
+      }
+
+      setPaymentProcessing(true);
+      try {
+        // Step 1 — create Stripe PaymentIntent (manual capture)
+        const { clientSecret, paymentIntentId } = await paymentApi.createPaymentIntent(
+          Number(form.amount),
+          txId
+        );
+
+        // Step 2 — initialise Payment Sheet
+        const { error: initError } = await initPaymentSheet({
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'TrustDepo',
+          style: 'alwaysDark',
+        });
+        if (initError) {
+          Alert.alert('Payment Error', initError.message);
+          navigation.getParent()?.navigate('Home', {
+            screen: 'TransactionDetail',
+            params: { transactionId: txId, transaction: txData },
+          });
+          return;
+        }
+
+        // Step 3 — present Payment Sheet
+        const { error: paymentError } = await presentPaymentSheet();
+        if (paymentError) {
+          if (paymentError.code !== 'Canceled') {
+            Alert.alert('Payment Failed', paymentError.message);
+          }
+          // Still navigate to transaction — user can pay later from TransactionDetail
+          navigation.getParent()?.navigate('Home', {
+            screen: 'TransactionDetail',
+            params: { transactionId: txId, transaction: txData },
+          });
+          return;
+        }
+
+        // Step 4 — mark transaction funded in our backend
+        const funded = await paymentApi.fundTransaction(txId, paymentIntentId);
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        Alert.alert('Funds Held!', 'Payment authorised. Funds are held in escrow until you release.', [
+          {
+            text: 'View Transaction',
+            onPress: () =>
+              navigation.getParent()?.navigate('Home', {
+                screen: 'TransactionDetail',
+                params: { transactionId: txId, transaction: funded },
+              }),
           },
-        },
-      ]);
+        ]);
+      } catch (err) {
+        Alert.alert('Error', err.message || 'Payment processing failed');
+        navigation.getParent()?.navigate('Home', {
+          screen: 'TransactionDetail',
+          params: { transactionId: txId, transaction: txData },
+        });
+      } finally {
+        setPaymentProcessing(false);
+      }
     },
     onError: (e) => Alert.alert('Error', e.message || 'Failed to create transaction'),
   });
@@ -303,11 +368,11 @@ export default function NewTransactionScreen({ navigation }) {
           <TouchableOpacity
             onPress={handleSubmit}
             activeOpacity={0.8}
-            disabled={createMutation.isPending}
+            disabled={createMutation.isPending || paymentProcessing}
             style={{ marginTop: 8 }}
           >
             <LinearGradient colors={['#059669', '#10b981']} style={styles.submitBtn}>
-              {createMutation.isPending ? (
+              {createMutation.isPending || paymentProcessing ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <>

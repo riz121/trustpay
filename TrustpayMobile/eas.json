@@ -11,8 +11,14 @@
     },
     "production": {
       "autoIncrement": true,
+      "ios": {
+        "distribution": "store"
+      },
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51TNywz4brST8ErLAwABZfMaTMFLFg3bLADOJ8CUrtfYH1D92ISYfjv0NLeHloyqwGI1pUFpTJDRxVATQEyGdrUgC00ZjL52WpO"
       }
     }
   },

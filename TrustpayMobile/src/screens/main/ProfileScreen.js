@@ -108,21 +108,9 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
-  const handlePrivacy = () => {
-    Alert.alert(
-      'Privacy Policy',
-      'TrustPay collects and processes your personal data in accordance with the UAE Data Protection Law and GDPR. We do not share your data with third parties without your consent.',
-      [{ text: 'OK' }]
-    );
-  };
+  const handlePrivacy = () => navigation.navigate('PrivacyPolicy');
 
-  const handleSecurity = () => {
-    Alert.alert(
-      'Security',
-      'Your account is protected with AES-256 encryption and bank-level security. All funds are held in segregated accounts at a licensed UAE bank.',
-      [{ text: 'OK' }]
-    );
-  };
+  const handleSecurity = () => navigation.navigate('Security');
 
   return (
     <View style={styles.container}>
@@ -130,6 +118,11 @@ export default function ProfileScreen({ navigation }) {
       <LinearGradient colors={['#0d1f17', '#0a0a0f']} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerContent}>
+            {navigation.canGoBack() ? (
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                <Feather name="arrow-left" size={22} color={colors.text} />
+              </TouchableOpacity>
+            ) : null}
             <Text style={styles.headerTitle}>Profile</Text>
           </View>
 
@@ -201,7 +194,7 @@ export default function ProfileScreen({ navigation }) {
           <MenuItem
             icon="list"
             label="Transaction History"
-            onPress={() => navigation.navigate('Home', { screen: 'Dashboard' })}
+            onPress={() => navigation.navigate('TransactionsList')}
           />
           <View style={styles.menuDivider} />
           <MenuItem
@@ -262,7 +255,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>TrustPay · UAE</Text>
+          <Text style={styles.footerText}>Trustdepo · UAE</Text>
           <Text style={styles.footerSubText}>Secure payments, simplified</Text>
         </View>
       </ScrollView>
@@ -274,8 +267,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
   header: { paddingBottom: 16 },
-  headerContent: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
+  headerContent: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 },
   headerTitle: { color: colors.text, fontSize: 24, fontWeight: '700' },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.06)', alignItems: 'center', justifyContent: 'center' },
 
   profileCard: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 20 },
   avatarWrapper: { position: 'relative', marginBottom: 14 },

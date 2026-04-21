@@ -79,7 +79,7 @@ export default function DashboardScreen({ navigation }) {
               <Text style={styles.greeting}>{getGreeting()},</Text>
               <Text style={styles.userName}>{firstName}</Text>
             </View>
-            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.bellBtn} activeOpacity={0.7} onPress={() => navigation.navigate('Notifications')}>
               <Feather name="bell" size={22} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -101,7 +101,7 @@ export default function DashboardScreen({ navigation }) {
 
           <View style={styles.balanceHeader}>
             <Feather name="shield" size={16} color={colors.primary} />
-            <Text style={styles.balanceHeaderText}>TrustPay Balance</Text>
+            <Text style={styles.balanceHeaderText}>Trustdepo Balance</Text>
           </View>
 
           <View style={styles.balanceAmountRow}>
@@ -137,78 +137,11 @@ export default function DashboardScreen({ navigation }) {
           </View>
         </GlassCard>
 
-        {/* ── New Transaction Quick Action (web-style) ── */}
-        <TouchableOpacity
-          style={styles.newTxCard}
-          onPress={() => navigation.navigate('NewTransaction')}
-          activeOpacity={0.8}
-        >
-          <GlassCard style={styles.newTxCardInner}>
-            <View style={styles.newTxIconWrap}>
-              <LinearGradient colors={['#059669', '#10b981']} style={styles.newTxIcon}>
-                <Feather name="plus" size={22} color="#fff" />
-              </LinearGradient>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.newTxTitle}>New Transaction</Text>
-              <Text style={styles.newTxSubtitle}>Create a secure payment</Text>
-            </View>
-            <Feather name="chevron-right" size={18} color={colors.textMuted} />
-          </GlassCard>
-        </TouchableOpacity>
-
-        {/* ── Quick Actions ── */}
-        <GlassCard style={styles.quickActionsCard}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActionsRow}>
-            <TouchableOpacity
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('NewTransaction')}
-              activeOpacity={0.8}
-            >
-              <LinearGradient colors={['#059669', '#10b981']} style={styles.quickActionIcon}>
-                <Feather name="plus-circle" size={22} color="#fff" />
-              </LinearGradient>
-              <Text style={styles.quickActionText}>New</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('Transactions')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(52,211,153,0.15)', borderWidth: 1, borderColor: 'rgba(52,211,153,0.3)' }]}>
-                <Feather name="list" size={22} color={colors.accent} />
-              </View>
-              <Text style={styles.quickActionText}>History</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('Payments')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(52,211,153,0.15)', borderWidth: 1, borderColor: 'rgba(52,211,153,0.3)' }]}>
-                <Feather name="dollar-sign" size={22} color={colors.emerald} />
-              </View>
-              <Text style={styles.quickActionText}>Payments</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickAction}
-              onPress={() => navigation.navigate('Profile')}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.quickActionIcon, { backgroundColor: 'rgba(251,191,36,0.15)', borderWidth: 1, borderColor: 'rgba(251,191,36,0.3)' }]}>
-                <Feather name="user" size={22} color={colors.yellow} />
-              </View>
-              <Text style={styles.quickActionText}>Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </GlassCard>
-
         {/* ── Recent Transactions ── */}
         <View style={styles.recentSection}>
           <View style={styles.recentHeader}>
             <Text style={styles.sectionTitle}>Recent</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Transactions')} activeOpacity={0.7}>
+            <TouchableOpacity onPress={() => navigation.navigate('TransactionsList')} activeOpacity={0.7}>
               <Text style={styles.viewAllText}>View all</Text>
             </TouchableOpacity>
           </View>
@@ -264,7 +197,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 20,
   },
   greeting: { color: colors.textMuted, fontSize: 14 },
   userName: { color: colors.text, fontSize: 24, fontWeight: '700' },
@@ -318,21 +251,6 @@ const styles = StyleSheet.create({
   },
   balanceStatLabel: { color: colors.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.6 },
   balanceStatValue: { color: colors.text, fontSize: 13, fontWeight: '600', marginTop: 1 },
-
-  // New Transaction card (web-style)
-  newTxCard: { marginBottom: 14 },
-  newTxCardInner: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16 },
-  newTxIconWrap: { borderRadius: 14, overflow: 'hidden' },
-  newTxIcon: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  newTxTitle: { color: colors.text, fontSize: 15, fontWeight: '600', marginBottom: 2 },
-  newTxSubtitle: { color: colors.textMuted, fontSize: 13 },
-
-  // Quick actions
-  quickActionsCard: { marginBottom: 20 },
-  quickActionsRow: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 16 },
-  quickAction: { alignItems: 'center', gap: 10 },
-  quickActionIcon: { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  quickActionText: { color: colors.textSecondary, fontSize: 12, fontWeight: '500' },
 
   // Recent transactions
   recentSection: { gap: 0 },

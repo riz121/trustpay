@@ -100,6 +100,8 @@ export const authApi = {
   updateMe: (data) => api.put('/api/auth/me', data),
   deleteMe: () => api.delete('/api/auth/me'),
   lookupUser: (username) => api.get(`/api/user/lookup?username=${encodeURIComponent(username)}`),
+  forgotPassword: (email) => api.post('/api/auth/forgot-password', { email }, false),
+  changePassword: (current_password, new_password) => api.put('/api/auth/change-password', { current_password, new_password }),
 };
 
 // Transaction endpoints
@@ -112,13 +114,36 @@ export const transactionApi = {
   disputeEscrow: (transaction_id, reason, file_url) =>
     api.post('/api/functions/disputeEscrow', { transaction_id, reason, ...(file_url && { file_url }) }),
   uploadDisputeFile: async (fileUri, fileName, mimeType) => {
+    const token = await getToken();
     const formData = new FormData();
     formData.append('file', { uri: fileUri, name: fileName, type: mimeType || 'application/octet-stream' });
-    const response = await api.post('/api/upload/dispute', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+
+    const response = await fetch(`${BASE_URL}/api/upload/dispute`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        // No Content-Type — fetch sets it automatically with multipart boundary
+      },
+      body: formData,
     });
-    return response.data;
+
+    let data;
+    try { data = await response.json(); } catch { data = {}; }
+
+    if (!response.ok) {
+      const error = new Error(data.message || data.error || `Upload failed with status ${response.status}`);
+      error.status = response.status;
+      throw error;
+    }
+
+    return data; // { url, name, size }
   },
+};
+
+// Dispute endpoints
+export const disputeApi = {
+  getMyDisputes: () => api.get('/api/user/disputes'),
 };
 
 // Bank account endpoints
@@ -131,4 +156,33 @@ export const bankApi = {
 // Withdrawal
 export const withdrawalApi = {
   request: (amount) => api.post('/api/functions/withdrawalRequest', { amount }),
+};
+
+// Payments / Stripe
+export const paymentApi = {
+  createPaymentIntent: (amount, transaction_id) =>
+    api.post('/api/payments/create-payment-intent', { amount, transaction_id }),
+  fundTransaction: (transaction_id, payment_intent_id) =>
+    api.post('/api/payments/fund-transaction', { transaction_id, payment_intent_id }),
+};
+
+// Stripe Connect
+export const connectApi = {
+  addBankAccount: (account_holder_name, iban) =>
+    api.post('/api/user/connect/add-bank', { account_holder_name, iban }),
+  getStatus: () => api.get('/api/user/connect/status'),
+};
+
+// Admin withdrawals
+export const adminWithdrawalApi = {
+  getAll: (status = 'pending') => api.get(`/api/admin/withdrawals?status=${status}`),
+  approve: (id) => api.post(`/api/admin/withdrawals/${id}/approve`, {}),
+  reject: (id, reason) => api.post(`/api/admin/withdrawals/${id}/reject`, { reason }),
+};
+
+// Live Chat
+export const chatApi = {
+  start: (subject) => api.post('/api/user/chat/start', { subject }),
+  getMessages: (conversation_id) => api.get(`/api/user/chat/messages?conversation_id=${conversation_id}`),
+  sendMessage: (conversation_id, content) => api.post('/api/user/chat/messages', { conversation_id, content }),
 };
