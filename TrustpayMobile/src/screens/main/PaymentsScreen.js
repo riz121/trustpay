@@ -194,8 +194,8 @@ function WithdrawTab({ availableBalance }) {
       Alert.alert('Invalid Amount', 'Please enter a valid withdrawal amount.');
       return;
     }
-    if (amount < 100) {
-      Alert.alert('Minimum Amount', 'The minimum withdrawal amount is AED 100.');
+    if (amount < 2) {
+      Alert.alert('Minimum Amount', 'The minimum withdrawal amount is AED 2.');
       return;
     }
     if (amount > availableBalance) {
@@ -231,7 +231,7 @@ function WithdrawTab({ availableBalance }) {
             <Text style={styles.availableAmount}>AED {formatAmount(availableBalance)}</Text>
           </View>
         </View>
-        <Text style={styles.availableNote}>Min. withdrawal: AED 100.00</Text>
+        <Text style={styles.availableNote}>Min. withdrawal: AED 2.00</Text>
       </GlassCard>
 
       {/* Stripe Connect Status / Bank Form */}
@@ -318,7 +318,7 @@ function WithdrawTab({ availableBalance }) {
       {isOnboarded && (
         <GlassCard style={styles.withdrawCard}>
           <Text style={styles.sectionTitle}>Withdrawal Amount</Text>
-          <Text style={styles.withdrawHint}>Minimum: AED 100.00</Text>
+          <Text style={styles.withdrawHint}>Minimum: AED 2.00</Text>
           <View style={styles.amountInputRow}>
             <View style={styles.amountInputWrap}>
               <Text style={styles.currencyLabel}>AED</Text>
