@@ -168,8 +168,8 @@ export const paymentApi = {
 
 // Stripe Connect
 export const connectApi = {
-  addBankAccount: (account_holder_name, iban) =>
-    api.post('/api/user/connect/add-bank', { account_holder_name, iban }),
+  addBankAccount: (account_holder_name, account_number, sort_code) =>
+    api.post('/api/user/connect/add-bank', { account_holder_name, account_number, sort_code }),
   getStatus: () => api.get('/api/user/connect/status'),
 };
 

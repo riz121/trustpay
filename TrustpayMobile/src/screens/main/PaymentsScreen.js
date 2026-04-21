@@ -142,7 +142,8 @@ function WithdrawTab({ availableBalance }) {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [showBankForm, setShowBankForm] = useState(false);
   const [holderName, setHolderName] = useState('');
-  const [iban, setIban] = useState('');
+  const [sortCode, setSortCode] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
 
   const { data: connectStatus, isLoading: loadingStatus, refetch: refetchStatus } = useQuery({
     queryKey: ['connectStatus'],
@@ -150,11 +151,12 @@ function WithdrawTab({ availableBalance }) {
   });
 
   const connectMutation = useMutation({
-    mutationFn: () => connectApi.addBankAccount(holderName.trim(), iban.trim()),
+    mutationFn: () => connectApi.addBankAccount(holderName.trim(), accountNumber.trim(), sortCode.trim()),
     onSuccess: () => {
       setShowBankForm(false);
       setHolderName('');
-      setIban('');
+      setSortCode('');
+      setAccountNumber('');
       refetchStatus();
       Alert.alert('Bank Connected!', 'Your bank account has been connected via Stripe. You can now request withdrawals.');
     },
@@ -175,9 +177,12 @@ function WithdrawTab({ availableBalance }) {
       Alert.alert('Required', 'Please enter the account holder name.');
       return;
     }
-    const cleanIban = iban.trim().toUpperCase().replace(/\s/g, '');
-    if (cleanIban.length < 15) {
-      Alert.alert('Invalid IBAN', 'Please enter a valid IBAN.');
+    if (!sortCode.trim()) {
+      Alert.alert('Required', 'Please enter your sort code.');
+      return;
+    }
+    if (!accountNumber.trim()) {
+      Alert.alert('Required', 'Please enter your account number.');
       return;
     }
     connectMutation.mutate();
@@ -264,12 +269,21 @@ function WithdrawTab({ availableBalance }) {
               autoCapitalize="words"
             />
             <BankInputField
-              label="IBAN"
+              label="Sort Code"
               icon="hash"
-              placeholder="AE07 0331 2345 6789 0123 456"
-              value={iban}
-              onChangeText={(v) => setIban(v.toUpperCase())}
-              autoCapitalize="characters"
+              placeholder="20-00-00"
+              value={sortCode}
+              onChangeText={setSortCode}
+              keyboardType="numbers-and-punctuation"
+              autoCorrect={false}
+            />
+            <BankInputField
+              label="Account Number"
+              icon="credit-card"
+              placeholder="55779911"
+              value={accountNumber}
+              onChangeText={setAccountNumber}
+              keyboardType="number-pad"
               autoCorrect={false}
             />
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
