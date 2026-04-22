@@ -10,47 +10,51 @@ import GlassCard from '../../components/GlassCard';
 const sections = [
   {
     title: '1. Information We Collect',
-    body: 'We collect information you provide during registration (name, email, Emirates ID, phone number), transaction data, device information, and usage analytics. We may also collect location data to comply with UAE regulatory requirements.',
+    body: 'When you register and use TrustDepo, we collect your full name, date of birth, and government-issued ID (UK passport or driving licence) for identity verification. We also collect your email address, phone number, bank account details (sort code, account number, IBAN) for payouts, and payment card details processed securely by Stripe. We collect transaction data, technical data (IP address, device type, OS, app version, login timestamps), usage data, and any communications with our support team.',
   },
   {
     title: '2. How We Use Your Information',
-    body: 'Your information is used to provide and improve our escrow services, verify your identity, process transactions, comply with UAE legal obligations, prevent fraud, and communicate with you about your account and transactions.',
+    body: 'We use your data to create and manage your TrustDepo account, verify your identity under UK Anti-Money Laundering (AML) and Know Your Customer (KYC) obligations, facilitate the holding and release of funds, communicate with you about your account, detect and prevent fraud, comply with UK legal and regulatory obligations, improve the platform, and resolve disputes.',
   },
   {
-    title: '3. Data Sharing',
-    body: 'We do not sell your personal data. We may share data with licensed UAE banks for fund custody, government authorities when required by law, identity verification providers, and fraud prevention services. All third parties are bound by strict data processing agreements.',
+    title: '3. Legal Basis for Processing',
+    body: 'Under UK GDPR we process your data on the following bases: Contract performance (to provide the TrustDepo service), Legal obligation (to comply with UK AML regulations and FCA guidance), Legitimate interests (fraud prevention and platform security), and Consent (for optional marketing communications, which you may withdraw at any time).',
   },
   {
-    title: '4. Data Security',
-    body: 'We use AES-256 encryption for data at rest and TLS 1.3 for data in transit. Your funds are held in segregated accounts at licensed UAE banks. We conduct regular security audits and penetration testing to protect your data.',
+    title: '4. Data Sharing',
+    body: 'We do not sell your personal data. We may share it only with Stripe (our FCA-authorised payment processing partner), identity verification providers to fulfil UK KYC obligations, UK regulatory and law enforcement authorities where required by law, fraud prevention services, and professional advisers under strict confidentiality obligations. All third parties are bound by data processing agreements.',
   },
   {
-    title: '5. UAE Personal Data Protection Law (PDPL)',
-    body: 'We comply fully with the UAE Federal Decree-Law No. 45 of 2021 on Personal Data Protection. You have the right to access, correct, and request deletion of your personal data. Requests can be submitted to privacy@trustdepo.com.',
+    title: '5. Data Security',
+    body: 'Our security measures include AES-256 encryption for data at rest, TLS 1.3 for data in transit, payment processing by Stripe (FCA-authorised, PCI DSS Level 1 certified), secure token-based authentication, strict internal access controls, and regular security reviews. In the event of a data breach, we will notify the ICO within 72 hours as required by UK GDPR.',
   },
   {
     title: '6. Data Retention',
-    body: 'We retain transaction records for a minimum of 5 years as required by UAE Anti-Money Laundering regulations. Personal account data is retained for 2 years after account closure. You may request early deletion of non-regulatory data.',
+    body: 'We retain transaction records for a minimum of 5 years as required by the UK Money Laundering Regulations 2017. Identity verification data is retained for 5 years after the end of the business relationship. Account data is retained for 2 years after account closure. Support communications are retained for 3 years. Contact privacy@trustdepo.com to request early deletion of non-regulatory data.',
   },
   {
-    title: '7. Cookies & Analytics',
-    body: 'Our mobile app uses local storage for session management. We use anonymised analytics to understand app usage and improve performance. No tracking cookies are used for advertising purposes.',
+    title: '7. International Transfers',
+    body: "Your data is primarily stored and processed within the United Kingdom. Where transfers outside the UK occur (such as via Stripe's infrastructure), we ensure appropriate safeguards are in place including UK adequacy decisions and UK International Data Transfer Agreements where required.",
   },
   {
     title: '8. Your Rights',
-    body: 'Under UAE PDPL, you have the right to: access your personal data, correct inaccurate data, request data deletion (subject to regulatory retention requirements), object to certain processing, and data portability. Contact us at privacy@trustdepo.com to exercise these rights.',
+    body: 'Under UK GDPR and the Data Protection Act 2018 you have the right to access your personal data, correct inaccurate data, request deletion (subject to legal retention requirements), restrict processing, receive your data in a portable format, and object to processing. Contact privacy@trustdepo.com. You may also lodge a complaint with the ICO at ico.org.uk or call 0303 123 1113.',
   },
   {
-    title: '9. International Transfers',
-    body: 'Your data is primarily stored within the UAE. Any transfer outside the UAE is done in compliance with PDPL requirements, with appropriate safeguards in place, and only to countries with adequate data protection standards.',
+    title: '9. Cookies & Analytics',
+    body: 'The TrustDepo app uses local device storage for essential session management and authentication. We use anonymised analytics to understand app usage and improve performance. We do not use advertising tracking cookies or share data with advertising networks.',
   },
   {
     title: "10. Children's Privacy",
-    body: 'Trustdepo is not intended for individuals under 18 years of age. We do not knowingly collect personal data from minors. If you believe a minor has registered, please contact us immediately at privacy@trustdepo.com.',
+    body: 'TrustDepo is intended exclusively for users aged 18 and over. We do not knowingly collect or process personal data from anyone under 18. If you believe a minor has registered, please contact privacy@trustdepo.com immediately and we will delete the data and close the account.',
   },
   {
     title: '11. Changes to This Policy',
-    body: 'We may update this Privacy Policy to reflect changes in our practices or applicable law. We will notify you of significant changes via email or in-app notification at least 14 days before they take effect.',
+    body: 'We may update this Privacy Policy periodically. We will notify you by email and via in-app notification at least 14 days before significant changes take effect. The updated policy will always be accessible within the TrustDepo app.',
+  },
+  {
+    title: '12. Contact',
+    body: 'TrustDepo Ltd is the data controller. Email: privacy@trustdepo.com | Website: www.trustdepo.com. ICO complaints: ico.org.uk, phone 0303 123 1113, or post to Wycliffe House, Water Lane, Wilmslow, Cheshire, SK9 5AF.',
   },
 ];
 

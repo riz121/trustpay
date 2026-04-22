@@ -12,16 +12,16 @@ const FAQS = [
     category: 'General',
     items: [
       {
-        q: 'What is Trustdepo?',
-        a: 'Trustdepo is a secure payment platform for the UAE that holds funds safely between two parties until both confirm the transaction is complete. It protects buyers and sellers from fraud.',
+        q: 'What is TrustDepo?',
+        a: 'TrustDepo is a secure escrow payment platform registered in England and Wales. We hold funds safely between two parties until both confirm the transaction is complete, protecting buyers and sellers from fraud.',
       },
       {
-        q: 'Who can use Trustdepo?',
-        a: 'Trustdepo is available to UAE residents and businesses. You must have a valid Emirates ID or trade license to use the platform.',
+        q: 'Who can use TrustDepo?',
+        a: 'TrustDepo is available to individuals and businesses in the United Kingdom. You must be at least 18 years old and provide valid UK identification (passport or driving licence) to use the platform.',
       },
       {
-        q: 'Is Trustdepo regulated in the UAE?',
-        a: 'We operate in compliance with UAE Central Bank regulations and ADGM/DIFC fintech frameworks for payment service providers.',
+        q: 'Is TrustDepo regulated in the UK?',
+        a: 'Payments are processed via Stripe, which is authorised and regulated by the Financial Conduct Authority (FCA). TrustDepo operates in compliance with UK GDPR, the Data Protection Act 2018, and UK Anti-Money Laundering Regulations 2017.',
       },
     ],
   },
@@ -30,19 +30,19 @@ const FAQS = [
     items: [
       {
         q: 'How does a secure transaction work?',
-        a: "1. The buyer deposits funds. 2. The seller delivers goods or services. 3. Both parties confirm completion. 4. Funds are released to the seller. If there's a dispute, our team mediates.",
+        a: "1. The buyer pays via card through the app. 2. Funds are held securely by Stripe. 3. The seller delivers goods or services. 4. The buyer verifies and taps Confirm & Release. 5. Funds are transferred to the seller. If there's a dispute, our team mediates.",
       },
       {
-        q: 'What is the minimum and maximum transaction amount?',
-        a: 'Minimum: AED 100. Maximum: AED 500,000 per transaction. For higher amounts, contact our enterprise team.',
+        q: 'What is the minimum transaction amount?',
+        a: 'The minimum transaction amount is £2 (or equivalent). For large transactions above £50,000, please contact our enterprise team at support@trustdepo.com.',
       },
       {
         q: 'How long are funds held?',
-        a: 'Funds remain held until both parties confirm, or until the agreed release date. Unclaimed funds after 90 days are reviewed by our team.',
+        a: 'Funds remain held until the buyer confirms completion. There is no fixed expiry — funds stay protected until both parties are satisfied. Contact support if a transaction is stuck.',
       },
       {
         q: 'Can I cancel a transaction?',
-        a: 'You can cancel a pending or funded transaction before either party confirms. Once both parties confirm, the transaction is final.',
+        a: 'You can cancel a pending or funded transaction by mutual agreement before the buyer confirms completion. Once the buyer taps Confirm & Release, the transaction is final and cannot be reversed.',
       },
     ],
   },
@@ -50,20 +50,20 @@ const FAQS = [
     category: 'Payments & Withdrawals',
     items: [
       {
-        q: 'How do I add funds to a transaction?',
-        a: 'You can deposit via UAE bank transfer, credit/debit card, or UAEFTS. Funds are credited within 1 business hour.',
+        q: 'How do I pay for a transaction?',
+        a: 'You pay securely via credit or debit card through the TrustDepo app, powered by Stripe. All major UK cards are accepted including Visa, Mastercard, and American Express.',
       },
       {
         q: 'When will released funds reach my bank?',
-        a: 'Once both parties confirm, funds are released immediately. UAE bank transfers typically settle within 1–2 business days.',
+        a: 'Once the buyer confirms completion, funds are released and transferred to your connected UK bank account via Stripe. UK bank transfers typically settle within 1–3 business days.',
       },
       {
         q: 'What are the fees?',
-        a: 'We charge a flat 1.5% fee on the transaction amount, deducted at release. There are no hidden fees or monthly charges.',
+        a: 'TrustDepo charges a platform fee on each successfully completed transaction, deducted automatically at release. The fee is shown clearly in the app before you create a deal. No monthly fees or hidden charges.',
       },
       {
-        q: 'Which banks are supported for withdrawal?',
-        a: 'All UAE banks are supported including Emirates NBD, FAB, ADCB, Mashreq, DIB, and all UAEFTS-connected banks.',
+        q: 'How do I connect my bank account for withdrawals?',
+        a: 'Go to Payments → Withdraw → Add Bank. Enter your account holder name, sort code, and account number. TrustDepo uses Stripe Connect to securely link your UK bank account for payouts.',
       },
     ],
   },
@@ -72,15 +72,15 @@ const FAQS = [
     items: [
       {
         q: 'How are my funds protected?',
-        a: 'All funds are held in segregated accounts at a licensed UAE bank. Your funds are never mixed with company funds and are fully insured.',
+        a: 'All funds are held securely by Stripe, which is FCA-authorised and PCI DSS Level 1 certified. TrustDepo never holds funds directly. Your money is protected by Stripe\'s regulated infrastructure.',
       },
       {
         q: 'What happens during a dispute?',
-        a: 'If either party raises a dispute, funds are frozen and our mediation team reviews the case within 3 business days. We support evidence submission via the app.',
+        a: 'If either party raises a dispute, funds are frozen and our support team reviews the case. Submit evidence through the app or email support@trustdepo.com. Funds remain held until the dispute is resolved.',
       },
       {
         q: 'Is my personal data safe?',
-        a: 'We use AES-256 encryption and comply with UAE PDPL (Personal Data Protection Law). Your data is never sold to third parties.',
+        a: 'We use AES-256 encryption and comply with UK GDPR and the Data Protection Act 2018. Your data is never sold to third parties. You can request access or deletion by emailing privacy@trustdepo.com.',
       },
     ],
   },

@@ -13,7 +13,7 @@ const sections = [
   {
     icon: 'lock',
     title: 'AES-256 Encryption',
-    body: 'All your personal data and transaction records are encrypted at rest using AES-256, the same standard used by international financial institutions and government agencies.',
+    body: 'All your personal data and transaction records are encrypted at rest using AES-256, the same standard used by leading UK financial institutions and government agencies.',
   },
   {
     icon: 'shield',
@@ -21,18 +21,18 @@ const sections = [
     body: 'Every communication between the app and our servers is protected by TLS 1.3, ensuring your data cannot be intercepted or tampered with in transit.',
   },
   {
-    icon: 'dollar-sign',
-    title: 'Segregated Fund Accounts',
-    body: 'Your escrow funds are held in segregated accounts at a licensed UAE bank. Trustdepo never commingles client funds with company operating funds.',
+    icon: 'credit-card',
+    title: 'Stripe — FCA Authorised',
+    body: 'All payments are processed by Stripe, which is authorised and regulated by the Financial Conduct Authority (FCA) in the UK and is PCI DSS Level 1 certified — the highest level of payment security.',
   },
   {
     icon: 'user-check',
-    title: 'Identity Verification',
-    body: 'We verify every user through UAE-compliant KYC (Know Your Customer) processes, including Emirates ID verification and phone number validation, to prevent fraud.',
+    title: 'UK KYC & Identity Verification',
+    body: 'We verify every user through UK-compliant Know Your Customer (KYC) processes, including passport or driving licence verification, in line with UK Anti-Money Laundering Regulations 2017.',
   },
   {
     icon: 'activity',
-    title: 'Real-Time Monitoring',
+    title: 'Real-Time Fraud Monitoring',
     body: 'Our fraud detection systems monitor transactions in real time, flagging suspicious activity and protecting both parties in every escrow agreement.',
   },
   {
@@ -52,8 +52,8 @@ const sections = [
   },
   {
     icon: 'file-text',
-    title: 'Regulatory Compliance',
-    body: 'Trustdepo complies with UAE Central Bank regulations, the UAE Federal Decree-Law No. 45 of 2021 on Personal Data Protection, and Anti-Money Laundering (AML) obligations.',
+    title: 'UK Regulatory Compliance',
+    body: 'TrustDepo complies with UK GDPR, the Data Protection Act 2018, UK Anti-Money Laundering Regulations 2017, FCA guidance for payment services, and the Proceeds of Crime Act 2002.',
   },
 ];
 
@@ -110,7 +110,7 @@ export default function SecurityScreen({ navigation }) {
           </View>
           <Text style={styles.heroTitle}>Bank-Level Security</Text>
           <Text style={styles.heroSub}>
-            Your account and funds are protected by the same security standards used by leading UAE financial institutions.
+            Your account and funds are protected by the same security standards used by leading UK financial institutions.
           </Text>
         </GlassCard>
 

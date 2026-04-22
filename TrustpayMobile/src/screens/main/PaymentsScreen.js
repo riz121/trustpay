@@ -586,15 +586,6 @@ export default function PaymentsScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, activeTab === 'deposit' && styles.tabActive]}
-              onPress={() => setActiveTab('deposit')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabText, activeTab === 'deposit' && styles.tabTextActive]}>
-                Deposit
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               style={[styles.tab, activeTab === 'withdraw' && styles.tabActive]}
               onPress={() => setActiveTab('withdraw')}
               activeOpacity={0.8}
@@ -620,8 +611,6 @@ export default function PaymentsScreen({ navigation }) {
             refetch={refetchTx}
             isRefetching={isRefetching}
           />
-        ) : activeTab === 'deposit' ? (
-          <DepositTab />
         ) : (
           <WithdrawTab availableBalance={available} />
         )}
