@@ -80,6 +80,12 @@ export default function TermsScreen({ navigation }) {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
+        <GlassCard style={styles.introCard}>
+          <Text style={styles.introText}>
+            TrustDepo Ltd ("TrustDepo", "we", "us", "our") is a company registered in England and Wales. By accessing or using the TrustDepo app, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our platform. These Terms apply to all users, including buyers and sellers.
+          </Text>
+        </GlassCard>
+
         {SECTIONS.map((section) => (
           <GlassCard key={section.title} style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -110,6 +116,8 @@ const styles = StyleSheet.create({
   headerTitle: { color: colors.text, fontSize: 18, fontWeight: '600' },
   headerSubtitle: { color: colors.textMuted, fontSize: 11, marginTop: 2 },
   scroll: { padding: 16, paddingBottom: 40 },
+  introCard: { marginBottom: 16, padding: 16, backgroundColor: 'rgba(16,185,129,0.06)' },
+  introText: { color: colors.textMuted, fontSize: 14, lineHeight: 22 },
   sectionCard: { marginBottom: 12, padding: 18 },
   sectionTitle: { color: colors.primary, fontSize: 14, fontWeight: '600', marginBottom: 8 },
   sectionBody: { color: colors.textMuted, fontSize: 14, lineHeight: 22 },

@@ -74,6 +74,12 @@ export default function PrivacyPolicyScreen({ navigation }) {
       </SafeAreaView>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <GlassCard style={styles.introCard}>
+          <Text style={styles.introText}>
+            TrustDepo Ltd ("TrustDepo", "we", "us", "our") is a company registered in England and Wales. We are committed to protecting your personal data in accordance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018. This Privacy Policy explains what data we collect, why we collect it, and how we use and protect it when you use the TrustDepo app.
+          </Text>
+        </GlassCard>
+
         {sections.map((section) => (
           <GlassCard key={section.title} style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>{section.title}</Text>
@@ -119,6 +125,8 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 16 },
 
+  introCard: { marginBottom: 16, padding: 16, backgroundColor: 'rgba(16,185,129,0.06)' },
+  introText: { color: colors.textMuted, fontSize: 14, lineHeight: 22 },
   sectionCard: { marginBottom: 12, padding: 16 },
   sectionTitle: {
     color: colors.primary,
