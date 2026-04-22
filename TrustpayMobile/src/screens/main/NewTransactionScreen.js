@@ -76,7 +76,7 @@ export default function NewTransactionScreen({ navigation }) {
     } else if (isNaN(Number(form.amount)) || Number(form.amount) <= 0) {
       e.amount = 'Enter a valid amount';
     } else if (Number(form.amount) < 2) {
-      e.amount = 'Minimum amount is AED 2.00';
+      e.amount = 'Minimum amount is £2.00';
     }
     if (!form.receiver_email.trim()) {
       e.receiver_email = 'Receiver email is required';
@@ -228,7 +228,7 @@ export default function NewTransactionScreen({ navigation }) {
             />
 
             <InputField
-              label="Amount (AED) *"
+              label="Amount (£) *"
               icon="dollar-sign"
               placeholder="0.00"
               value={form.amount}
@@ -358,7 +358,7 @@ export default function NewTransactionScreen({ navigation }) {
               {form.amount ? (
                 <SummaryRow
                   label="Amount"
-                  value={`AED ${Number(form.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                  value={`£${Number(form.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
                 />
               ) : null}
               {form.receiver_email ? <SummaryRow label="To" value={form.receiver_email} /> : null}

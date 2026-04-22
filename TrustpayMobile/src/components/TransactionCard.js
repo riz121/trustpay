@@ -38,7 +38,7 @@ export default function TransactionCard({ transaction, onPress, currentUserEmail
       </View>
       <View style={styles.right}>
         <Text style={[styles.amount, { color: amountColor }]}>
-          {sign} AED {formatAmount(transaction.amount)}
+          {sign} £{formatAmount(transaction.amount)}
         </Text>
         <StatusBadge status={transaction.status} size="sm" />
       </View>

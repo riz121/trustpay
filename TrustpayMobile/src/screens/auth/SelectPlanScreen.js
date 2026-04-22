@@ -17,7 +17,7 @@ const PLANS = [
   {
     id: 'free',
     name: 'Free',
-    price: 'AED 0',
+    price: '£0',
     period: '/month',
     color: colors.textMuted,
     gradient: ['#374151', '#1f2937'],
@@ -27,7 +27,7 @@ const PLANS = [
   {
     id: 'standard',
     name: 'Standard',
-    price: 'AED 49',
+    price: '£49',
     period: '/month',
     color: colors.primary,
     gradient: ['#059669', '#10b981'],
@@ -37,7 +37,7 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 'AED 149',
+    price: '£149',
     period: '/month',
     color: colors.emerald,
     gradient: ['#059669', '#34d399'],

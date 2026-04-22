@@ -123,7 +123,7 @@ function TransactionLogTab({ transactions, userEmail, isLoading, refetch, isRefe
             </View>
             <View style={styles.logRight}>
               <Text style={[styles.logAmount, { color: amountColor }]}>
-                {sign} AED {formatAmount(tx.amount)}
+                {sign} £{formatAmount(tx.amount)}
               </Text>
               <Text style={styles.logStatus}>
                 {(tx.status || '').replace(/_/g, ' ')}
@@ -195,16 +195,16 @@ function WithdrawTab({ availableBalance }) {
       return;
     }
     if (amount < 2) {
-      Alert.alert('Minimum Amount', 'The minimum withdrawal amount is AED 2.');
+      Alert.alert('Minimum Amount', 'The minimum withdrawal amount is £2.');
       return;
     }
     if (amount > availableBalance) {
-      Alert.alert('Insufficient Balance', `Your available balance is AED ${formatAmount(availableBalance)}.`);
+      Alert.alert('Insufficient Balance', `Your available balance is £${formatAmount(availableBalance)}.`);
       return;
     }
     Alert.alert(
       'Confirm Withdrawal',
-      `Request withdrawal of AED ${formatAmount(amount)}?\n\nAdmin will approve and Stripe will transfer to your bank.`,
+      `Request withdrawal of £${formatAmount(amount)}?\n\nAdmin will approve and Stripe will transfer to your bank.`,
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Confirm', onPress: () => withdrawMutation.mutate(amount) },
@@ -228,10 +228,10 @@ function WithdrawTab({ availableBalance }) {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.availableLabel}>Available to Withdraw</Text>
-            <Text style={styles.availableAmount}>AED {formatAmount(availableBalance)}</Text>
+            <Text style={styles.availableAmount}>£{formatAmount(availableBalance)}</Text>
           </View>
         </View>
-        <Text style={styles.availableNote}>Min. withdrawal: AED 2.00</Text>
+        <Text style={styles.availableNote}>Min. withdrawal: £2.00</Text>
       </GlassCard>
 
       {/* Stripe Connect Status / Bank Form */}
@@ -318,10 +318,10 @@ function WithdrawTab({ availableBalance }) {
       {isOnboarded && (
         <GlassCard style={styles.withdrawCard}>
           <Text style={styles.sectionTitle}>Withdrawal Amount</Text>
-          <Text style={styles.withdrawHint}>Minimum: AED 2.00</Text>
+          <Text style={styles.withdrawHint}>Minimum: £2.00</Text>
           <View style={styles.amountInputRow}>
             <View style={styles.amountInputWrap}>
-              <Text style={styles.currencyLabel}>AED</Text>
+              <Text style={styles.currencyLabel}>£</Text>
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"
@@ -377,7 +377,7 @@ function DepositTab() {
   const handleDeposit = async () => {
     const num = Number(amount);
     if (!amount || isNaN(num) || num < 2) {
-      Alert.alert('Invalid Amount', 'Minimum deposit is AED 2.00');
+      Alert.alert('Invalid Amount', 'Minimum deposit is £2.00');
       return;
     }
 
@@ -416,7 +416,7 @@ function DepositTab() {
           Alert.alert('Payment Failed', presentError.message);
         }
       } else {
-        Alert.alert('Deposit Successful!', `AED ${formatAmount(num)} has been added to your account.`);
+        Alert.alert('Deposit Successful!', `£${formatAmount(num)} has been added to your account.`);
         setAmount('');
       }
     } catch (err) {
@@ -458,7 +458,7 @@ function DepositTab() {
         {/* Custom amount input */}
         <View style={styles.amountInputRow}>
           <View style={styles.amountInputWrap}>
-            <Text style={styles.currencyLabel}>AED</Text>
+            <Text style={styles.currencyLabel}>£</Text>
             <TextInput
               style={styles.amountInput}
               placeholder="0.00"
@@ -561,7 +561,7 @@ export default function PaymentsScreen({ navigation }) {
                 </View>
                 <Text style={styles.balanceLabel}>Available</Text>
               </View>
-              <Text style={styles.balanceAmount}>AED {formatAmount(available)}</Text>
+              <Text style={styles.balanceAmount}>£{formatAmount(available)}</Text>
             </GlassCard>
             <GlassCard style={styles.balanceCard}>
               <View style={styles.balanceIconRow}>
@@ -570,7 +570,7 @@ export default function PaymentsScreen({ navigation }) {
                 </View>
                 <Text style={styles.balanceLabel}>Pending</Text>
               </View>
-              <Text style={styles.balanceAmount}>AED {formatAmount(pending)}</Text>
+              <Text style={styles.balanceAmount}>£{formatAmount(pending)}</Text>
             </GlassCard>
           </View>
 

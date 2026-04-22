@@ -105,7 +105,7 @@ export default function DashboardScreen({ navigation }) {
           </View>
 
           <View style={styles.balanceAmountRow}>
-            <Text style={styles.balanceCurrency}>AED</Text>
+            <Text style={styles.balanceCurrency}>£</Text>
             <Text style={styles.balanceAmount}>
               {totalHeld.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             </Text>
@@ -130,7 +130,7 @@ export default function DashboardScreen({ navigation }) {
               <View>
                 <Text style={styles.balanceStatLabel}>Released</Text>
                 <Text style={styles.balanceStatValue}>
-                  AED {totalReleased.toLocaleString('en-US', { minimumFractionDigits: 0 })}
+                  £{totalReleased.toLocaleString('en-US', { minimumFractionDigits: 0 })}
                 </Text>
               </View>
             </View>

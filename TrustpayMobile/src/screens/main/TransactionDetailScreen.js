@@ -234,7 +234,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
         {/* Amount Card */}
         <LinearGradient colors={['#1a1a2e', '#0f0f1a']} style={styles.amountCard}>
           <Text style={styles.amountLabel}>Transaction Amount</Text>
-          <Text style={styles.amountValue}>AED {formatAmount(transaction.amount)}</Text>
+          <Text style={styles.amountValue}>£{formatAmount(transaction.amount)}</Text>
           <View style={styles.statusRow}>
             <StatusBadge status={transaction.status} size="lg" />
           </View>
@@ -336,10 +336,10 @@ export default function TransactionDetailScreen({ navigation, route }) {
         {transaction.status === 'released' && transaction.platform_fee > 0 && (
           <GlassCard style={styles.section}>
             <Text style={styles.sectionTitle}>Fee Breakdown</Text>
-            <DetailRow label="Transaction Amount" value={`AED ${formatAmount(transaction.amount)}`} />
-            <DetailRow label="Platform Fee (2%)" value={`− AED ${formatAmount(transaction.platform_fee)}`} />
+            <DetailRow label="Transaction Amount" value={`£${formatAmount(transaction.amount)}`} />
+            <DetailRow label="Platform Fee (2%)" value={`− £${formatAmount(transaction.platform_fee)}`} />
             <View style={styles.feeDivider} />
-            <DetailRow label="Seller Receives" value={`AED ${formatAmount(transaction.seller_amount)}`} />
+            <DetailRow label="Seller Receives" value={`£${formatAmount(transaction.seller_amount)}`} />
           </GlassCard>
         )}
 
@@ -361,7 +361,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
                   ) : (
                     <>
                       <Feather name="credit-card" size={18} color="#fff" />
-                      <Text style={styles.actionBtnText}>Pay Now — AED {formatAmount(transaction.amount)}</Text>
+                      <Text style={styles.actionBtnText}>Pay Now — £{formatAmount(transaction.amount)}</Text>
                     </>
                   )}
                 </LinearGradient>
