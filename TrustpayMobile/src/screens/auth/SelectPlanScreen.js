@@ -490,12 +490,12 @@ export default function SelectPlanScreen({ navigation }) {
                   showsVerticalScrollIndicator
                 >
                   {[
-                    { title: '1. Escrow Service', body: 'Trustdepo holds funds in segregated accounts at a licensed UAE bank until both parties confirm the transaction or a dispute is resolved.' },
+                    { title: '1. Secure Payment Service', body: 'TrustDepo holds funds securely between two parties until both confirm the transaction is complete or a dispute is resolved.' },
                     { title: '2. User Obligations', body: 'You must provide accurate information, use the platform lawfully, and not engage in fraud, money laundering, or any activity that violates UAE law.' },
                     { title: '3. Fees', body: 'Transaction fees apply based on your selected plan. Fees are non-refundable once a transaction is initiated.' },
                     { title: '4. Disputes', body: 'Disputes must be filed within 30 days of transaction creation. Trustdepo will review evidence from both parties and issue a binding decision within 5 business days.' },
                     { title: '5. Data & Privacy', body: 'Your personal data is processed in accordance with the UAE Personal Data Protection Law (PDPL). We do not sell your data to third parties.' },
-                    { title: '6. Limitation of Liability', body: 'Trustdepo is not liable for losses arising from circumstances beyond our control. Our maximum liability is limited to the transaction amount held in escrow.' },
+                    { title: '6. Limitation of Liability', body: 'TrustDepo is not liable for losses arising from circumstances beyond our control. Our maximum liability is limited to the transaction amount held in trust.' },
                     { title: '7. Governing Law', body: 'These terms are governed by the laws of the United Arab Emirates. Any disputes shall be subject to the exclusive jurisdiction of UAE courts.' },
                   ].map((s) => (
                     <View key={s.title} style={styles.termItem}>

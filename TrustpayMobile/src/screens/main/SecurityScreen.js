@@ -33,7 +33,7 @@ const sections = [
   {
     icon: 'activity',
     title: 'Real-Time Fraud Monitoring',
-    body: 'Our fraud detection systems monitor transactions in real time, flagging suspicious activity and protecting both parties in every escrow agreement.',
+    body: 'Our fraud detection systems monitor transactions in real time, flagging suspicious activity and protecting both parties in every secure transaction.',
   },
   {
     icon: 'refresh-cw',
@@ -48,7 +48,7 @@ const sections = [
   {
     icon: 'alert-triangle',
     title: 'Dispute Resolution',
-    body: 'Our escrow dispute system provides a secure, documented process for resolving disagreements, with evidence uploaded to encrypted cloud storage for review.',
+    body: 'Our dispute system provides a secure, documented process for resolving disagreements, with evidence uploaded to encrypted cloud storage for review.',
   },
   {
     icon: 'file-text',

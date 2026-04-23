@@ -13,7 +13,7 @@ const FAQS = [
     items: [
       {
         q: 'What is TrustDepo?',
-        a: 'TrustDepo is a secure escrow payment platform registered in England and Wales. We hold funds safely between two parties until both confirm the transaction is complete, protecting buyers and sellers from fraud.',
+        a: 'TrustDepo is a secure payment platform registered in England and Wales. We hold funds safely between two parties until both confirm the transaction is complete, protecting buyers and sellers from fraud.',
       },
       {
         q: 'Who can use TrustDepo?',

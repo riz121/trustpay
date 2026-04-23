@@ -107,7 +107,7 @@ export default function TransactionDetailScreen({ navigation, route }) {
 
       await paymentApi.fundTransaction(transactionId, paymentIntentId);
       invalidate();
-      Alert.alert('Funds Held!', 'Payment authorised. Funds are held in escrow until you release.');
+      Alert.alert('Funds Held!', 'Payment authorised. Funds are held securely until you release.');
     } catch (err) {
       Alert.alert('Error', err.message || 'Payment processing failed');
     } finally {

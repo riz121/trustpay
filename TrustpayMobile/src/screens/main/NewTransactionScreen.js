@@ -147,7 +147,7 @@ export default function NewTransactionScreen({ navigation }) {
         // Step 4 — mark transaction funded in our backend
         const funded = await paymentApi.fundTransaction(txId, paymentIntentId);
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
-        Alert.alert('Funds Held!', 'Payment authorised. Funds are held in escrow until you release.', [
+        Alert.alert('Funds Held!', 'Payment authorised. Funds are held securely until you release.', [
           {
             text: 'View Transaction',
             onPress: () =>
