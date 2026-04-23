@@ -16,7 +16,7 @@ const SECTIONS = [
   },
   {
     title: '3. Payment Services',
-    body: 'TrustDepo acts as a neutral third party to hold funds securely between two parties during a transaction. Funds are held via our payment partner Stripe, which is authorised and regulated by the Financial Conduct Authority (FCA). Funds are released only when the buyer confirms that the agreed conditions have been met. TrustDepo does not hold funds directly and is not a bank or payment institution.',
+    body: 'TrustDepo acts as a neutral third party to facilitate secure payments between two parties during a transaction. Funds are processed via our payment partner Stripe, which is authorised and regulated by the Financial Conduct Authority (FCA). Funds are released only when the buyer confirms that the agreed conditions have been met. TrustDepo does not hold funds directly and is not a bank or payment institution.',
   },
   {
     title: '4. Buyer Verification Responsibility',
