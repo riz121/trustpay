@@ -3,7 +3,9 @@
     "allow": [
       "Bash(ls /Users/rizwanahmed/Documents/project/pay/Trustpay/*.env*)",
       "Bash(ls /Users/rizwanahmed/Documents/project/pay/Trustpay/.env*)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(git subtree *)",
+      "Bash(git -C /Users/rizwanahmed/Documents/project/pay show HEAD:Trustpay/backend/server.js)"
     ]
   }
 }
