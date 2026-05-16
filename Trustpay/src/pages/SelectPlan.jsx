@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Check, Zap, Crown, Loader2, ArrowLeft, CreditCard, User } from 'lucide-react';
+import { Shield, Check, Zap, Crown, Loader2, ArrowLeft, CreditCard, User, Camera, RefreshCw, X, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -178,7 +178,251 @@ function StepProfile({ data, onChange, onNext, onBack }) {
   );
 }
 
-// ── Step 3: Payment Details ───────────────────────────────────────────────────
+// ── Step 3: Document Scan ─────────────────────────────────────────────────────
+function StepDocScan({ data, onChange, onNext, onBack }) {
+  const [stream, setStream] = useState(null);
+  const [capturing, setCapturing] = useState(null); // 'passport' | 'dl_front' | 'dl_back'
+  const [cameraError, setCameraError] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [stream]);
+
+  useEffect(() => {
+    return () => { streamRef.current?.getTracks().forEach(t => t.stop()); };
+  }, []);
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setStream(null);
+    setCapturing(null);
+  };
+
+  const startCamera = async (target) => {
+    setCameraError('');
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      streamRef.current = s;
+      setCapturing(target);
+      setStream(s);
+    } catch {
+      setCameraError('Camera access denied. Please allow camera permissions in your browser.');
+    }
+  };
+
+  const capture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    onChange(capturing, dataUrl);
+    stopCamera();
+  };
+
+  const retake = (target) => {
+    onChange(target, null);
+    startCamera(target);
+  };
+
+  const handleDocTypeChange = (type) => {
+    stopCamera();
+    onChange('docType', type);
+    onChange('passport', null);
+    onChange('dl_front', null);
+    onChange('dl_back', null);
+  };
+
+  const isComplete =
+    data.docType === 'passport' ? !!data.passport :
+    data.docType === 'dl' ? !!data.dl_front && !!data.dl_back :
+    false;
+
+  // ── Camera active view ───────────────────────────────────────────────────────
+  if (stream && capturing) {
+    const label =
+      capturing === 'passport' ? 'Align your passport in the frame' :
+      capturing === 'dl_front' ? 'Scan the front of your driving licence' :
+      'Now scan the back of your driving licence';
+    return (
+      <div className="flex flex-col flex-1 pt-4">
+        <button onClick={stopCamera} className="flex items-center gap-2 text-muted-foreground text-sm mb-4">
+          <X className="w-4 h-4" /> Cancel
+        </button>
+        <p className="text-sm text-muted-foreground mb-3">{label}</p>
+        <div className="relative rounded-2xl overflow-hidden bg-black flex-1 min-h-[260px]">
+          <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
+          <div className="absolute inset-4 border-2 border-white/40 rounded-xl pointer-events-none" />
+          <div className="absolute bottom-6 left-0 right-0 flex justify-center">
+            <button
+              onClick={capture}
+              className="w-16 h-16 rounded-full bg-white border-4 border-white/60 shadow-xl active:scale-95 transition-transform"
+            />
+          </div>
+        </div>
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+    );
+  }
+
+  // ── Normal form view ─────────────────────────────────────────────────────────
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+        <button onClick={onBack} className="flex items-center gap-2 text-muted-foreground text-sm mb-6">
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Camera className="w-5 h-5 text-primary" />
+          </div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Verify identity</h1>
+        </div>
+        <p className="text-muted-foreground text-sm mb-6">Scan your document using your camera. No uploads — camera only.</p>
+      </motion.div>
+
+      {cameraError && (
+        <p className="text-xs text-red-400 mb-4 px-1">{cameraError}</p>
+      )}
+
+      {/* Doc type selection */}
+      {!data.docType && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-3 flex-1">
+          {[
+            { id: 'passport', label: 'Passport', desc: '1 scan required', Icon: BookOpen },
+            { id: 'dl', label: 'Driving Licence', desc: 'Front + back required', Icon: CreditCard },
+          ].map(({ id, label, desc, Icon }) => (
+            <button
+              key={id}
+              onClick={() => handleDocTypeChange(id)}
+              className="w-full text-left rounded-2xl border border-white/8 bg-white/[0.02] hover:bg-white/[0.04] p-4 flex items-center gap-4 transition-all"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">{label}</p>
+                <p className="text-xs text-muted-foreground">{desc}</p>
+              </div>
+            </button>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Passport flow */}
+      {data.docType === 'passport' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex-1 space-y-4">
+          <button onClick={() => handleDocTypeChange(null)} className="text-xs text-muted-foreground underline underline-offset-2">
+            Change document type
+          </button>
+          {data.passport ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Passport</p>
+              <div className="rounded-2xl overflow-hidden aspect-[3/2] bg-black/40">
+                <img src={data.passport} className="w-full h-full object-cover" alt="Passport scan" />
+              </div>
+              <button onClick={() => retake('passport')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <RefreshCw className="w-4 h-4" /> Retake
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => startCamera('passport')}
+              className="w-full rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.02] h-44 flex flex-col items-center justify-center gap-3 hover:bg-white/[0.04] transition-all"
+            >
+              <Camera className="w-8 h-8 text-primary/60" />
+              <p className="text-sm font-semibold">Tap to scan passport</p>
+              <p className="text-xs text-muted-foreground">Camera only — no upload</p>
+            </button>
+          )}
+        </motion.div>
+      )}
+
+      {/* Driving licence flow */}
+      {data.docType === 'dl' && (
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex-1 space-y-5">
+          <button onClick={() => handleDocTypeChange(null)} className="text-xs text-muted-foreground underline underline-offset-2">
+            Change document type
+          </button>
+
+          {/* Front */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Front</p>
+            {data.dl_front ? (
+              <div className="space-y-2">
+                <div className="rounded-2xl overflow-hidden aspect-[3/2] bg-black/40">
+                  <img src={data.dl_front} className="w-full h-full object-cover" alt="Licence front" />
+                </div>
+                <button onClick={() => retake('dl_front')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <RefreshCw className="w-4 h-4" /> Retake front
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => startCamera('dl_front')}
+                className="w-full rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.02] h-32 flex flex-col items-center justify-center gap-2 hover:bg-white/[0.04] transition-all"
+              >
+                <Camera className="w-6 h-6 text-primary/60" />
+                <p className="text-sm font-semibold">Tap to scan front</p>
+              </button>
+            )}
+          </div>
+
+          {/* Back */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Back</p>
+            {data.dl_back ? (
+              <div className="space-y-2">
+                <div className="rounded-2xl overflow-hidden aspect-[3/2] bg-black/40">
+                  <img src={data.dl_back} className="w-full h-full object-cover" alt="Licence back" />
+                </div>
+                <button onClick={() => retake('dl_back')} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <RefreshCw className="w-4 h-4" /> Retake back
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => startCamera('dl_back')}
+                disabled={!data.dl_front}
+                className="w-full rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.02] h-32 flex flex-col items-center justify-center gap-2 hover:bg-white/[0.04] transition-all disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Camera className="w-6 h-6 text-primary/60" />
+                <p className="text-sm font-semibold">Tap to scan back</p>
+                {!data.dl_front && <p className="text-xs text-muted-foreground">Scan front first</p>}
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      <canvas ref={canvasRef} className="hidden" />
+
+      <div className="py-8">
+        <Button
+          onClick={onNext}
+          disabled={!isComplete}
+          className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 disabled:opacity-40"
+        >
+          Continue
+        </Button>
+      </div>
+    </>
+  );
+}
+
+// ── Step 4: Payment Details ───────────────────────────────────────────────────
 function StepPayment({ plan, data, onChange, onSubmit, onBack, loading }) {
   const planInfo = plans.find(p => p.id === plan);
   const valid = data.card_number.replace(/\s/g, '').length === 16 && data.expiry.length === 5 && data.cvv.length >= 3 && data.name.trim().length >= 2;
@@ -287,25 +531,27 @@ function StepPayment({ plan, data, onChange, onSubmit, onBack, loading }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function SelectPlan({ onComplete }) {
-  const [step, setStep] = useState(1); // 1=plan, 2=profile, 3=payment
+  const [step, setStep] = useState(1); // 1=plan, 2=profile, 3=docs, 4=payment
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const [profile, setProfile] = useState({ phone: '', city: '', company: '', emirates_id: '' });
+  const [docs, setDocs] = useState({ docType: null, passport: null, dl_front: null, dl_back: null });
   const [payment, setPayment] = useState({ name: '', card_number: '', expiry: '', cvv: '' });
 
   const updateProfile = (k, v) => setProfile(p => ({ ...p, [k]: v }));
+  const updateDocs = (k, v) => setDocs(d => ({ ...d, [k]: v }));
   const updatePayment = (k, v) => setPayment(p => ({ ...p, [k]: v }));
 
-  const handlePlanNext = () => {
-    setStep(2);
-  };
+  const handlePlanNext = () => setStep(2);
 
-  const handleProfileNext = () => {
+  const handleProfileNext = () => setStep(3);
+
+  const handleDocsNext = () => {
     if (selected === 'free') {
       handleFinish();
     } else {
-      setStep(3);
+      setStep(4);
     }
   };
 
@@ -350,7 +596,7 @@ export default function SelectPlan({ onComplete }) {
 
         {/* Step indicators */}
         <div className="flex items-center gap-2 pt-4 pb-2">
-          {[1, 2, 3].map(s => (
+          {[1, 2, 3, 4].map(s => (
             <div
               key={s}
               className={`h-1 rounded-full flex-1 transition-all duration-300 ${s <= step ? 'bg-primary' : 'bg-white/10'}`}
@@ -370,13 +616,18 @@ export default function SelectPlan({ onComplete }) {
             </motion.div>
           )}
           {step === 3 && (
+            <motion.div key="docs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
+              <StepDocScan data={docs} onChange={updateDocs} onNext={handleDocsNext} onBack={() => setStep(2)} />
+            </motion.div>
+          )}
+          {step === 4 && (
             <motion.div key="payment" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col flex-1">
               <StepPayment
                 plan={selected}
                 data={payment}
                 onChange={updatePayment}
                 onSubmit={handleFinish}
-                onBack={() => setStep(2)}
+                onBack={() => setStep(3)}
                 loading={loading}
               />
             </motion.div>
