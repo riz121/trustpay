@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { Shield, ArrowRight, Lock, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+
+
 const features = [
-  { icon: Shield, text: 'Funds held securely in UAE-regulated accounts' },
-  { icon: Zap, text: 'Instant status updates for both parties' },
-  { icon: Users, text: 'Trusted by buyers & sellers across the UAE' },
+  { icon: 'shield', text: 'Buyer & Seller Protection Trade knowing both sides are fully covered, no matter what.' },
+  { icon: 'zap', text: 'Funds Held Securely Until You Confirm Money sits safe in escrow until you’re ready to release it. ' },
+  { icon: 'users', text: '24/7 Live Support.' },
 ];
 
 export default function AuthLanding() {
@@ -26,8 +28,8 @@ export default function AuthLanding() {
             <Shield className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <p className="text-lg font-extrabold tracking-tight leading-none">Escrow Pay</p>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UAE</p>
+            <p className="text-lg font-extrabold tracking-tight leading-none">TrustDepo</p>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UK</p>
           </div>
         </div>
 
@@ -55,8 +57,8 @@ export default function AuthLanding() {
               transition={{ delay: 0.25 }}
               className="text-4xl font-extrabold tracking-tight leading-tight mb-4"
             >
-              The smarter way to pay in the{' '}
-              <span className="text-primary">UAE</span>
+             The Escrow App that makes deals safe in the{' '}
+              <span className="text-primary">UK</span>
             </motion.h1>
 
             <motion.p
@@ -65,7 +67,7 @@ export default function AuthLanding() {
               transition={{ delay: 0.35 }}
               className="text-muted-foreground text-base leading-relaxed"
             >
-              Escrow payments that protect both buyer and seller — from freelance gigs to property deals.
+              Protected transactions for everyday deals.
             </motion.p>
           </div>
 

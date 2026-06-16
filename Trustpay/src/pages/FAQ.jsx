@@ -9,16 +9,16 @@ const faqs = [
     category: 'General',
     items: [
       {
-        q: 'What is Escrow Pay?',
-        a: 'Escrow Pay is a secure payment platform for the UAE that holds funds safely between two parties until both confirm the transaction is complete. It protects buyers and sellers from fraud.',
+        q: 'What is TrustDepo?',
+        a: 'TrustDepo is a secure payment platform for the UK that holds funds safely between two parties until both confirm the transaction is complete. It protects buyers and sellers from fraud.',
       },
       {
-        q: 'Who can use Escrow Pay?',
-        a: 'Escrow Pay is available to UAE residents and businesses. You must have a valid Emirates ID or trade license to use the platform.',
+        q: 'Who can use TrustDepo?',
+        a: 'TrustDepo is available to UK residents and businesses. You must have a valid UK passport or driving licence to use the platform.',
       },
       {
-        q: 'Is Escrow Pay regulated in the UAE?',
-        a: 'We operate in compliance with UAE Central Bank regulations and ADGM/DIFC fintech frameworks for payment service providers.',
+        q: 'Is TrustDepo regulated in the UK?',
+        a: 'We operate in compliance with Financial Conduct Authority (FCA).',
       },
     ],
   },
@@ -31,7 +31,7 @@ const faqs = [
       },
       {
         q: 'What is the minimum and maximum transaction amount?',
-        a: 'Minimum: AED 100. Maximum: AED 500,000 per transaction. For higher amounts, contact our enterprise team.',
+        a: 'Minimum: GBP 100. Maximum: GBP 500,000 per transaction. For higher amounts, contact our enterprise team.',
       },
       {
         q: 'How long are funds held in escrow?',
@@ -48,11 +48,11 @@ const faqs = [
     items: [
       {
         q: 'How do I add funds to escrow?',
-        a: 'You can deposit via UAE bank transfer, credit/debit card, or UAEFTS. Funds are credited within 1 business hour.',
+        a: 'You can deposit via UK bank transfer, credit/debit card, or UK Faster Payments. Funds are credited within 1 business hour.',
       },
       {
         q: 'When will released funds reach my bank?',
-        a: 'Once both parties confirm, funds are released immediately. UAE bank transfers typically settle within 1–2 business days.',
+        a: 'Once both parties confirm, funds are released immediately. UK bank transfers typically settle within 1–2 business days.',
       },
       {
         q: 'What are the fees?',
@@ -60,7 +60,7 @@ const faqs = [
       },
       {
         q: 'Which banks are supported for withdrawal?',
-        a: 'All UAE banks are supported including Emirates NBD, FAB, ADCB, Mashreq, DIB, and all UAEFTS-connected banks.',
+        a: 'All UK banks are supported including Barclays, HSBC, Lloyds, NatWest, Santander, and all Faster Payments-connected banks.',
       },
     ],
   },
@@ -69,7 +69,7 @@ const faqs = [
     items: [
       {
         q: 'How are my funds protected?',
-        a: 'All escrow funds are held in segregated accounts at a licensed UAE bank. Your funds are never mixed with company funds and are fully insured.',
+        a: 'All escrow funds are held in segregated accounts at a licensed UK bank. Your funds are never mixed with company funds and are fully insured.',
       },
       {
         q: 'What happens during a dispute?',
@@ -77,7 +77,7 @@ const faqs = [
       },
       {
         q: 'Is my personal data safe?',
-        a: 'We use AES-256 encryption and comply with UAE PDPL (Personal Data Protection Law). Your data is never sold to third parties.',
+        a: 'We use AES-256 encryption and comply with UK GDPR (General Data Protection Regulation). Your data is never sold to third parties.',
       },
     ],
   },
@@ -182,8 +182,8 @@ export default function FAQ() {
         className="glass-accent rounded-2xl p-5 mt-6 mb-4 text-center"
       >
         <p className="text-sm font-medium mb-1">Still need help?</p>
-        <p className="text-xs text-muted-foreground mb-3">Our UAE support team is available 24/7</p>
-        <p className="text-xs text-primary font-semibold">support@escrowpay.ae</p>
+        <p className="text-xs text-muted-foreground mb-3">Our UK support team is available 24/7</p>
+        <p className="text-xs text-primary font-semibold">support@trustdepo.com</p>
       </motion.div>
     </div>
   );

@@ -124,7 +124,7 @@ export default function TransactionDetail() {
         <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-primary/10 blur-2xl" />
         <StatusBadge status={transaction.status} />
         <div className="mt-4">
-          <span className="text-sm text-muted-foreground">AED</span>
+          <span className="text-sm text-muted-foreground">GBP</span>
           <span className="text-4xl font-bold ml-1">{transaction.amount?.toLocaleString()}</span>
         </div>
         <p className="text-sm text-foreground mt-2 font-medium">{transaction.title}</p>

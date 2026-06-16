@@ -22,8 +22,8 @@ const FEATURES = [
   },
   {
     icon: Globe,
-    title: 'UAE Compliant',
-    desc: 'Fully regulated for the UAE market. Compliant with CBUAE guidelines and international standards.',
+    title: 'FCA Compliant',
+    desc: 'Fully regulated for the UK market. Compliant with FCA guidelines and international standards.',
     gradient: 'from-teal-400/20 to-purple-500/10',
     iconColor: 'text-teal-300',
   },
@@ -43,8 +43,8 @@ const STEPS = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'Ahmed Al Rashid', role: 'Property Developer, Dubai', stars: 5, text: 'TrustPay gave us the confidence to close a AED 2M property deal with a new partner. The escrow process was seamless and professional.' },
-  { name: 'Fatima Hassan', role: 'Freelance Designer, Abu Dhabi', stars: 5, text: 'As a freelancer, getting paid was always stressful. Now I use TrustPay for every project. Clients trust it and I get paid on time.' },
+  { name: 'James Thompson', role: 'Property Developer, London', stars: 5, text: 'TrustPay gave us the confidence to close a £2M property deal with a new partner. The escrow process was seamless and professional.' },
+  { name: 'Fatima Hassan', role: 'Freelance Designer, Manchester', stars: 5, text: 'As a freelancer, getting paid was always stressful. Now I use TrustPay for every project. Clients trust it and I get paid on time.' },
   { name: 'Raj Patel', role: 'E-commerce Seller, Sharjah', stars: 5, text: 'We handle 30+ transactions a month through TrustPay. The Standard plan is worth every dirham. Zero disputes since we switched.' },
 ];
 
@@ -53,7 +53,7 @@ const PLANS = [
     id: 'free',
     name: 'Free',
     price: '0',
-    currency: 'AED',
+    currency: 'GBP',
     period: 'forever',
     desc: 'Perfect for individuals trying escrow for the first time.',
     features: [
@@ -73,7 +73,7 @@ const PLANS = [
     id: 'standard',
     name: 'Standard',
     price: '149',
-    currency: 'AED',
+    currency: 'GBP',
     period: 'per month',
     desc: 'For freelancers and small businesses closing deals regularly.',
     features: [
@@ -94,7 +94,7 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     price: '299',
-    currency: 'AED',
+    currency: 'GBP',
     period: 'per month',
     desc: 'For high-volume teams and enterprises with complex needs.',
     features: [
@@ -114,24 +114,24 @@ const PLANS = [
 
 const USE_CASES = [
   { icon: Briefcase, title: 'Freelancers & Agencies', desc: 'Get paid confidently for every project. Clients release funds only when satisfied.' },
-  { icon: Home, title: 'Property Deals', desc: 'Secure deposits and transfers for real estate transactions across the UAE.' },
+  { icon: Home, title: 'Property Deals', desc: 'Secure deposits and transfers for real estate transactions across the UK.' },
   { icon: ShoppingBag, title: 'E-commerce & Trade', desc: 'Protect buyers and sellers in high-value online and B2B transactions.' },
   { icon: Code, title: 'Tech & SaaS', desc: 'Manage milestone-based payments for software development and consulting.' },
 ];
 
 const STATS = [
-  { value: 'AED 2B+', label: 'Secured in escrow', icon: Shield },
+  { value: 'GBP 2B+', label: 'Secured in escrow', icon: Shield },
   { value: '10,000+', label: 'Active users', icon: Users },
   { value: '99.9%', label: 'Platform uptime', icon: TrendingUp },
   { value: '< 60s', label: 'To create an escrow', icon: Clock },
   { value: '3 days', label: 'Avg. dispute resolution', icon: BadgeCheck },
-  { value: '0 AED', label: 'Hidden fees', icon: AlertCircle },
+  { value: '0 GBP', label: 'Hidden fees', icon: AlertCircle },
 ];
 
 const WHY_ITEMS = [
   { icon: '🔐', title: 'No trust required upfront', desc: 'Funds are locked in escrow before any work begins — both sides are protected from day one.' },
   { icon: '⚡', title: 'Faster than bank transfers', desc: 'Skip the paperwork and 3-day clearing times. Escrow releases happen in real time.' },
-  { icon: '🇦🇪', title: 'Built for the UAE', desc: 'AED-native, CBUAE-compliant, and designed for the UAE business landscape.' },
+  { icon: '🇬🇧', title: 'Built for the UK', desc: 'GBP-native, FCA-compliant, and designed for the UK business landscape.' },
   { icon: '🛡️', title: 'Regulated & audited', desc: 'Your funds are held in fully insured, regulated accounts — not our operating funds.' },
 ];
 
@@ -154,7 +154,7 @@ export default function Landing() {
               <Shield className="w-4 h-4 text-white" />
             </div>
             <span className="font-extrabold text-lg tracking-tight">TrustPay</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400 bg-teal-400/10 px-2 py-0.5 rounded-full">UAE</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400 bg-teal-400/10 px-2 py-0.5 rounded-full">UK</span>
           </div>
 
           <div className="hidden md:flex items-center gap-8">
@@ -207,7 +207,7 @@ export default function Landing() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-8 text-xs text-white/70">
               <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-              Trusted by 10,000+ users across the UAE
+              Trusted by 10,000+ users across the UK
             </div>
 
             <h1 className="text-5xl sm:text-7xl font-extrabold leading-[1.05] tracking-tight mb-6">
@@ -219,7 +219,7 @@ export default function Landing() {
 
             <p className="text-lg sm:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
               TrustPay holds funds in regulated escrow until both parties are satisfied.
-              The smartest way to transact in the UAE — for freelancers, businesses, and property deals.
+              The smartest way to transact in the UK — for freelancers, businesses, and property deals.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
@@ -236,11 +236,11 @@ export default function Landing() {
             {/* Stats row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.06] rounded-2xl overflow-hidden border border-white/[0.06]">
               {[
-                { value: 'AED 2B+', label: 'Secured' },
+                { value: 'GBP 2B+', label: 'Secured' },
                 { value: '10K+', label: 'Users' },
                 { value: '99.9%', label: 'Uptime' },
                 { value: '< 60s', label: 'Setup time' },
-                { value: '0 AED', label: 'Hidden fees' },
+                { value: '0 GBP', label: 'Hidden fees' },
                 { value: '3 days', label: 'Dispute resolved' },
               ].map(s => (
                 <div key={s.label} className="bg-[#0A0A0A] px-6 py-5 text-center">
@@ -263,7 +263,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-teal-400 text-xs font-bold uppercase tracking-widest mb-3">Why TrustPay</p>
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">The smarter way to transact</h2>
+            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">The Escrow App that makes deals safe in the <span className="text-primary">UK</span></h2>
             <p className="text-white/40 mt-4 max-w-xl mx-auto">Stop relying on trust. Start relying on escrow.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -316,7 +316,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <p className="text-purple-400 text-xs font-bold uppercase tracking-widest mb-3">Who It's For</p>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Every deal, every industry</h2>
-            <p className="text-white/40 mt-4">TrustPay works for anyone exchanging value in the UAE.</p>
+            <p className="text-white/40 mt-4">TrustPay works for anyone exchanging value in the UK.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {USE_CASES.map((uc, i) => {
@@ -373,7 +373,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <p className="text-teal-400 text-xs font-bold uppercase tracking-widest mb-3">Testimonials</p>
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Trusted across the UAE</h2>
+            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Trusted across the UK</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
@@ -410,7 +410,7 @@ export default function Landing() {
           <div className="text-center mb-4">
             <p className="text-teal-400 text-xs font-bold uppercase tracking-widest mb-3">Pricing</p>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Simple, transparent pricing</h2>
-            <p className="text-white/40 mt-4">All prices in AED. No setup fees. No hidden costs. Cancel anytime.</p>
+            <p className="text-white/40 mt-4">All prices in GBP. No setup fees. No hidden costs. Cancel anytime.</p>
           </div>
 
           {/* Fee note */}
@@ -484,7 +484,7 @@ export default function Landing() {
               Ready to transact{' '}
               <span className="bg-gradient-to-r from-teal-400 to-purple-400 bg-clip-text text-transparent">with confidence?</span>
             </h2>
-            <p className="text-white/40 text-lg mb-10">Join thousands of UAE professionals who trust TrustPay for every deal.</p>
+            <p className="text-white/40 text-lg mb-10">Join thousands of UK professionals who trust TrustPay for every deal.</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link to="/"
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-400 to-teal-500 text-black font-bold px-10 py-4 rounded-full text-base hover:opacity-90 transition-all hover:scale-105 shadow-[0_0_50px_rgba(45,212,191,0.3)]">
@@ -510,7 +510,7 @@ export default function Landing() {
               </div>
               <div>
                 <span className="font-extrabold">TrustPay</span>
-                <span className="text-white/30 text-xs ml-2">UAE</span>
+                <span className="text-white/30 text-xs ml-2">UK</span>
               </div>
             </div>
             <div className="flex flex-wrap justify-center gap-6 text-sm text-white/40">
@@ -519,7 +519,7 @@ export default function Landing() {
               <Link to="/faq" className="hover:text-white transition-colors">FAQ</Link>
               <a href="mailto:support@trustpay.ae" className="hover:text-white transition-colors">support@trustpay.ae</a>
             </div>
-            <p className="text-xs text-white/20">© 2026 TrustPay UAE. All rights reserved.</p>
+            <p className="text-xs text-white/20">© 2026 TrustDepo UK. All rights reserved.</p>
           </div>
         </div>
       </footer>

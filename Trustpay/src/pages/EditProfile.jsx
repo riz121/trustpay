@@ -50,8 +50,8 @@ export default function EditProfile() {
     { key: 'full_name', label: 'Full Name', icon: User, placeholder: 'Your full name', type: 'text' },
     { key: 'phone', label: 'Phone Number', icon: Phone, placeholder: '+971 50 000 0000', type: 'tel' },
     { key: 'company', label: 'Company / Business', icon: Building2, placeholder: 'Company name (optional)', type: 'text' },
-    { key: 'city', label: 'City', icon: MapPin, placeholder: 'Dubai, Abu Dhabi...', type: 'text' },
-    { key: 'emirates_id', label: 'Emirates ID', icon: null, placeholder: '784-XXXX-XXXXXXX-X', type: 'text' },
+    { key: 'city', label: 'City', icon: MapPin, placeholder: 'London, Manchester...', type: 'text' },
+    { key: 'emirates_id', label: 'UK passport or driving licence', icon: null, placeholder: '784-XXXX-XXXXXXX-X', type: 'text' },
   ];
 
   return (

@@ -139,7 +139,7 @@ function StepProfile({ data, onChange, onNext, onBack }) {
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground uppercase tracking-wider">City</Label>
           <Input
-            placeholder="e.g. Dubai"
+            placeholder="e.g. London"
             value={data.city}
             onChange={e => onChange('city', e.target.value)}
             className="glass border-white/5 h-12 rounded-xl text-sm placeholder:text-muted-foreground/50"
@@ -155,7 +155,7 @@ function StepProfile({ data, onChange, onNext, onBack }) {
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Emirates ID (Optional)</Label>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">UK passport or driving licence (Optional)</Label>
           <Input
             placeholder="784-XXXX-XXXXXXX-X"
             value={data.emirates_id}
@@ -457,7 +457,7 @@ function StepPayment({ plan, data, onChange, onSubmit, onBack, loading }) {
         <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-primary/10 blur-2xl" />
         <div className="flex justify-between items-start mb-8">
           <Shield className="w-5 h-5 text-primary" />
-          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Escrow Pay</span>
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">TrustDepo</span>
         </div>
         <p className="text-base font-mono tracking-widest text-foreground mb-3">
           {data.card_number || '•••• •••• •••• ••••'}
@@ -589,8 +589,8 @@ export default function SelectPlan({ onComplete }) {
             <Shield className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <p className="text-base font-extrabold tracking-tight leading-none">Escrow Pay</p>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UAE</p>
+            <p className="text-base font-extrabold tracking-tight leading-none">TrustDepo</p>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UK</p>
           </div>
         </div>
 

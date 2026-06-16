@@ -21,7 +21,7 @@ export default function BalanceCard({ totalHeld, totalReleased, activeCount }) {
         </div>
 
         <div className="mb-6">
-          <span className="text-sm text-muted-foreground">AED</span>
+          <span className="text-sm text-muted-foreground">GBP</span>
           <span className="text-4xl font-bold tracking-tight ml-1">
             {totalHeld.toLocaleString('en-AE', { minimumFractionDigits: 2 })}
           </span>
@@ -43,7 +43,7 @@ export default function BalanceCard({ totalHeld, totalReleased, activeCount }) {
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Released</p>
-              <p className="text-sm font-semibold">AED {totalReleased.toLocaleString('en-AE', { minimumFractionDigits: 0 })}</p>
+              <p className="text-sm font-semibold">GBP {totalReleased.toLocaleString('en-AE', { minimumFractionDigits: 0 })}</p>
             </div>
           </div>
         </div>

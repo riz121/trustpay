@@ -80,7 +80,7 @@ export default function Payments() {
   const handleWithdraw = (e) => {
     e.preventDefault();
     if (!withdrawAmount || parseFloat(withdrawAmount) < 100) {
-      toast.error('Minimum withdrawal is AED 100');
+      toast.error('Minimum withdrawal is GBP 100');
       return;
     }
     withdrawMutation.mutate(parseFloat(withdrawAmount));
@@ -118,11 +118,11 @@ export default function Payments() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Available</p>
-            <p className="text-2xl font-bold text-primary">AED {available.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-primary">GBP {available.toLocaleString()}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Pending Release</p>
-            <p className="text-2xl font-bold">AED {pending.toLocaleString()}</p>
+            <p className="text-2xl font-bold">GBP {pending.toLocaleString()}</p>
           </div>
         </div>
       </motion.div>
@@ -175,7 +175,7 @@ export default function Payments() {
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={`text-sm font-bold ${entry.type === 'deposit' ? 'text-muted-foreground' : 'text-primary'}`}>
-                      {entry.type === 'deposit' ? '−' : '+'} AED {entry.amount?.toLocaleString()}
+                      {entry.type === 'deposit' ? '−' : '+'} GBP {entry.amount?.toLocaleString()}
                     </span>
                     {statusIcon(entry.status)}
                   </div>
@@ -228,7 +228,7 @@ export default function Payments() {
             {showAddBank && (
               <form onSubmit={handleAddBank} className="space-y-3 mt-4 pt-4 border-t border-white/5">
                 <Input
-                  placeholder="Bank name (e.g. Emirates NBD)"
+                  placeholder="Bank name (e.g. Barclays)"
                   value={newBank.bank_name}
                   onChange={e => setNewBank(b => ({ ...b, bank_name: e.target.value }))}
                   required
@@ -272,7 +272,7 @@ export default function Payments() {
           {/* Withdraw Form */}
           <form onSubmit={handleWithdraw} className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Amount to Withdraw (AED)</Label>
+              <Label className="text-xs text-muted-foreground uppercase tracking-wider">Amount to Withdraw (GBP)</Label>
               <Input
                 type="number"
                 value={withdrawAmount}
@@ -283,13 +283,13 @@ export default function Payments() {
                 required
                 className="glass border-white/5 h-14 rounded-xl text-2xl font-bold placeholder:text-muted-foreground/30 placeholder:text-2xl"
               />
-              <p className="text-[11px] text-muted-foreground pl-1">Available: AED {available.toLocaleString()}</p>
+              <p className="text-[11px] text-muted-foreground pl-1">Available: GBP {available.toLocaleString()}</p>
             </div>
 
             <div className="glass rounded-xl p-4 space-y-2 text-xs text-muted-foreground">
               <div className="flex justify-between">
                 <span>Withdrawal amount</span>
-                <span>AED {withdrawAmount || '0.00'}</span>
+                <span>GBP {withdrawAmount || '0.00'}</span>
               </div>
               <div className="flex justify-between">
                 <span>Processing fee (0%)</span>
@@ -297,9 +297,9 @@ export default function Payments() {
               </div>
               <div className="border-t border-white/5 pt-2 flex justify-between font-semibold text-foreground">
                 <span>You receive</span>
-                <span>AED {withdrawAmount || '0.00'}</span>
+                <span>GBP {withdrawAmount || '0.00'}</span>
               </div>
-              <p className="text-[10px] pt-1">Funds arrive in 1–2 business days via UAEFTS</p>
+              <p className="text-[10px] pt-1">Funds arrive in 1–2 business days via UK Faster Payments</p>
             </div>
 
             <Button
@@ -307,7 +307,7 @@ export default function Payments() {
               disabled={withdrawMutation.isPending || !withdrawAmount || parseFloat(withdrawAmount) > available}
               className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90"
             >
-              {withdrawMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : `Withdraw AED ${withdrawAmount || '0.00'}`}
+              {withdrawMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : `Withdraw GBP ${withdrawAmount || '0.00'}`}
             </Button>
           </form>
         </motion.div>

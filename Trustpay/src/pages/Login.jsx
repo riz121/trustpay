@@ -9,9 +9,9 @@ import apiClient from '@/api/apiClient';
 import { toast } from 'sonner';
 
 const features = [
-  { icon: Shield, text: 'Funds held securely in UAE-regulated accounts' },
-  { icon: Zap, text: 'Instant status updates for both parties' },
-  { icon: Users, text: 'Trusted by buyers & sellers across the UAE' },
+  { icon: 'shield', text: 'Buyer & Seller Protection Trade knowing both sides are fully covered, no matter what.' },
+  { icon: 'zap', text: 'Funds Held Securely Until You Confirm Money sits safe in escrow until you’re ready to release it. ' },
+  { icon: 'users', text: '24/7 Live Support.' },
 ];
 
 export default function Login({ initialError = '', initialMode = 'landing' }) {
@@ -137,7 +137,7 @@ export default function Login({ initialError = '', initialMode = 'landing' }) {
           </div>
           <div>
             <p className="text-lg font-extrabold tracking-tight leading-none">TrustPay</p>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UAE</p>
+            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">UK</p>
           </div>
         </div>
 
@@ -152,10 +152,10 @@ export default function Login({ initialError = '', initialMode = 'landing' }) {
                   <span className="text-[10px] text-primary font-semibold uppercase tracking-widest">Secure & Trusted</span>
                 </div>
                 <h1 className="text-4xl font-extrabold tracking-tight leading-tight mb-4">
-                  The smarter way to pay in the <span className="text-primary">UAE</span>
+                  The Escrow App that makes deals safe in the <span className="text-primary">UK</span>
                 </h1>
                 <p className="text-muted-foreground text-base leading-relaxed">
-                  Escrow payments that protect both buyer and seller — from freelance gigs to property deals.
+                  Protected transactions for everyday deals.
                 </p>
               </div>
               <div className="space-y-3 mb-10">

@@ -28,7 +28,7 @@ export default function TransactionItem({ transaction, index = 0, currentUserEma
           <div className="flex items-center justify-between gap-2 mb-1">
             <p className="text-sm font-medium truncate">{transaction.title}</p>
             <span className="text-sm font-bold text-foreground whitespace-nowrap">
-              AED {transaction.amount?.toLocaleString()}
+              GBP {transaction.amount?.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between gap-2">

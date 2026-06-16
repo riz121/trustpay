@@ -11,9 +11,9 @@ import { authApi } from '../../api/apiClient';
 import { colors } from '../../theme/colors';
 
 const FEATURES = [
-  { icon: 'shield', text: 'Funds held securely in regulated accounts' },
-  { icon: 'zap', text: 'Instant status updates for both parties' },
-  { icon: 'users', text: 'Trusted by buyers & sellers across the world' },
+  { icon: 'shield', text: 'Buyer & Seller Protection Trade knowing both sides are fully covered, no matter what.' },
+  { icon: 'zap', text: 'Funds Held Securely Until You Confirm Money sits safe in escrow until you’re ready to release it. ' },
+  { icon: 'users', text: '24/7 Live Support.' },
 ];
 
 export default function LoginScreen({ navigation }) {
@@ -154,11 +154,11 @@ export default function LoginScreen({ navigation }) {
               </View>
 
               <Text style={styles.headline}>
-                The smarter way{'\n'}to pay
+                The Escrow App that {'\n'}makes deals safe
               </Text>
 
               <Text style={styles.subtitle}>
-                Payments that protect both buyer and seller — from freelance gigs to property deals.
+                Protected transactions for everyday deals.
               </Text>
             </View>
 

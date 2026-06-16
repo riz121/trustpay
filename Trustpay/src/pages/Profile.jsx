@@ -69,7 +69,7 @@ export default function Profile() {
         <p className="text-sm text-muted-foreground">{user?.email}</p>
         <div className="flex items-center justify-center gap-1 mt-2">
           <Shield className="w-3 h-3 text-primary" />
-          <span className="text-[10px] text-primary font-semibold uppercase tracking-wider">UAE Verified</span>
+          <span className="text-[10px] text-primary font-semibold uppercase tracking-wider">UK Verified</span>
         </div>
         <Link
           to="/profile/edit"
@@ -171,7 +171,7 @@ export default function Profile() {
 
       {/* Footer */}
       <div className="text-center mt-8 mb-4">
-        <p className="text-[10px] text-muted-foreground">TrustPay · UAE</p>
+        <p className="text-[10px] text-muted-foreground">TrustDepo · UK</p>
         <p className="text-[10px] text-muted-foreground/50">Secure payments, simplified</p>
       </div>
     </div>

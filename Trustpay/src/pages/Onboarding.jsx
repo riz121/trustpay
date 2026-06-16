@@ -9,7 +9,7 @@ const slides = [
     accent: 'text-primary',
     bg: 'bg-primary/10',
     title: 'Secure Escrow\nPayments',
-    subtitle: 'Hold funds safely until both parties are satisfied. Trusted by thousands across the UAE.',
+    subtitle: 'Hold funds safely until both parties are satisfied. Trusted by thousands across the UK.',
     gradient: 'from-primary/20 via-transparent to-transparent',
   },
   {

@@ -97,7 +97,7 @@ export default function NewTransaction() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Amount (AED)</Label>
+          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Amount (GBP)</Label>
           <Input
             type="number"
             value={form.amount}
@@ -162,7 +162,7 @@ export default function NewTransaction() {
           {createMutation.isPending ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            `Deposit AED ${form.amount || '0.00'}`
+            `Deposit GBP ${form.amount || '0.00'}`
           )}
         </Button>
       </motion.form>
